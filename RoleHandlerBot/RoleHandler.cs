@@ -53,7 +53,7 @@ namespace RoleHandlerBot
                     if (await Blockchain.ChainWatcher.GetBalanceOf(TokenAddress, await User.GetUserAddress(user.Id)) < BigInteger.Parse(GetBN()))
                     {
                         await user.RemoveRoleAsync(role);
-                        await user.SendMessageAsync($"Hello!\nYour role `{role.Name}` in the `{guild.Name}` was removed as your token balance went below the requirement of {GetBN()} {TokenName.ToUpper()}."
+                        await user.SendMessageAsync($"Hello!\nYour role `{role.Name}` in the `{guild.Name}` was removed as your token balance went below the requirement of {Requirement} {TokenName.ToUpper()}."
                             + "To reclaim the role, please make sure to make the minimum requirement in your wallet!");
                     }
                 }
