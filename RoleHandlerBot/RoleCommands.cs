@@ -76,6 +76,7 @@ namespace RoleHandlerBot
         public async Task TestRun() {
 
             //await RoleHandler.CheckAllRolesReq();
+            //Console.WriteLine("");
         }
 
         [Command("showRoles", RunMode = RunMode.Async)]

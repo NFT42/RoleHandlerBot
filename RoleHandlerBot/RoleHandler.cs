@@ -112,7 +112,7 @@ namespace RoleHandlerBot
                 }
             }
             catch (Exception e){
-                Logger.Log(e.Message);
+                Logger.Log("Run check error : " + e.Message);
             }
 
         }
