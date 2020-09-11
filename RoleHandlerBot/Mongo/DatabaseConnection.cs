@@ -15,6 +15,7 @@ namespace RoleHandlerBot.Mongo
         {
             Client = new MongoClient(MongoUrl);
             Database = Client.GetDatabase(DatabaseName);
+            Logger.LogInternal("Connected to Mongo Database");
         }
 
         public static void Init(string mongo_url)

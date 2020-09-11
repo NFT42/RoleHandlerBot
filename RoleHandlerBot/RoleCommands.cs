@@ -34,7 +34,7 @@ namespace RoleHandlerBot
 
         [Command("help")]
         public async Task GetHelp() {
-            var embed = new EmbedBuilder().WithTitle("Help").WithColor(Color.DarkRed);
+            var embed = new EmbedBuilder().WithTitle("❓ Help ❓").WithColor(Color.DarkRed);
             embed.AddField("Add a role", "Use command `$addrole @role tokenName tokenAddress requirement decimal claimName` to add a command");
             embed.AddField("Remove a role", "Use command `$deleterole @role` to remove a role");
             embed.AddField("Show all roles", "Use command `$showroles` to get a list of all roles");
@@ -86,13 +86,13 @@ namespace RoleHandlerBot
                 return;
             var roles = await RoleHandler.GetAllRoles();
             roles = roles.Where(r => r.guildId == Context.Guild.Id).ToList();
-            var embed = new EmbedBuilder().WithTitle("Roles").WithColor(Color.Blue);
+            var embed = new EmbedBuilder().WithTitle("📜 Roles 📜").WithColor(Color.Blue);
             embed.WithDescription("Delete a role handler using `$deleteRole @role`");
 
             int i = 1;
             foreach (var role in roles) {
                 var mention = Context.Guild.GetRole(role.RoleId).Mention;
-                embed.AddField($"{i}. Requirement: {role.Requirement} {role.TokenName}", $"{mention}");
+                embed.AddField($"{i}. Requirement: {role.Requirement} {role.TokenName}", $"{mention} | type `$claim {role.ClaimName}` to claim");
             }
             await ReplyAsync(embed: embed.Build());
         }
