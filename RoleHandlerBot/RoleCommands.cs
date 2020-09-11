@@ -14,22 +14,40 @@ namespace RoleHandlerBot
 {
     public class RoleCommands : ModuleBase
     {
-        public bool IsAdmin()
+        public async Task<bool> IsAdmin()
         {
-            var user = Context.Message.Author as SocketGuildUser;
+            if (Context.Guild == null) {
+                await ReplyAsync("You must issue this command inside a server!");
+                return false;
+            }
+            var user = Context.Message.Author as IGuildUser;
             if (user.Id == 195567858133106697)
                 return true;
-            var roles = user.Roles;
-            foreach (var role in roles)
+            var roleIDs = user.RoleIds;
+            foreach (var roleID in roleIDs) {
+                var role = Context.Guild.GetRole(roleID);
                 if (role.Name == "Avastars Corp" || role.Name.Contains("Admin"))
                     return true;
+            }
             return false;
+        }
+
+        [Command("help")]
+        public async Task GetHelp() {
+            var embed = new EmbedBuilder().WithTitle("Help").WithColor(Color.DarkRed);
+            embed.AddField("Add a role", "Use command `$addrole @role tokenName tokenAddress requirement decimal claimName` to add a command");
+            embed.AddField("Remove a role", "Use command `$deleterole @role` to remove a role");
+            embed.AddField("Show all roles", "Use command `$showroles` to get a list of all roles");
+            embed.AddField("Attach an address", "Use command `$verify address` and paste result from web app");
+            embed.AddField("Claim a role", "Use command `$claim claimName` to claim a role if you meet requirements");
+            await ReplyAsync(embed: embed.Build());
+
         }
 
         [Command("AddRole", RunMode = RunMode.Async)]
         public async Task AddRole(IRole role, string tokenName, string token, int req, int dec, string name)
         {
-            if (!IsAdmin())
+            if (!await IsAdmin())
                 return;
             if (Context.Guild == null)
             {
@@ -43,7 +61,7 @@ namespace RoleHandlerBot
         [Command("DeleteRole", RunMode = RunMode.Async)]
         public async Task Dlete(IRole role)
         {
-            if (!IsAdmin())
+            if (!await IsAdmin())
                 return;
             if (Context.Guild == null)
             {
@@ -57,19 +75,14 @@ namespace RoleHandlerBot
         [Command("TestRun", RunMode = RunMode.Async)]
         public async Task TestRun() {
 
-            await RoleHandler.CheckAllRolesReq();
+            //await RoleHandler.CheckAllRolesReq();
         }
 
         [Command("showRoles", RunMode = RunMode.Async)]
         public async Task ShowRoles()
         {
-            if (!IsAdmin())
+            if (! await IsAdmin())
                 return;
-            if (Context.Guild == null)
-            {
-                await ReplyAsync("You must issue this command inside a server!");
-                return;
-            }
             var roles = await RoleHandler.GetAllRoles();
             roles = roles.Where(r => r.guildId == Context.Guild.Id).ToList();
             var embed = new EmbedBuilder().WithTitle("Roles").WithColor(Color.Blue);
