@@ -141,6 +141,13 @@ namespace RoleHandlerBot
         {
             if (hash.Length == 0)
             {
+                if (address.EndsWith(".eth")) {
+                    address = await Blockchain.Utils.GetENSAddress(address);
+                    if (address == null || address == "0x0000000000000000000000000000000000000000") {
+                        await ReplyAsync("Error: could not find ens domain.");
+                        return;
+                    }
+                }
                 var message = "**Paste back the value copied on your clipboard here!\nThe value will be obtained by signing a message on the website**";
                 var embed = new EmbedBuilder().WithTitle("Follow this link to verify your address").WithDescription(message);
                 embed.WithColor(Color.DarkMagenta);

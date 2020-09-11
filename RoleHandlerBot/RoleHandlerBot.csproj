@@ -9,6 +9,7 @@
     <PackageReference Include="MongoDB.Driver" Version="2.11.1" />
     <PackageReference Include="Discord.Net" Version="2.2.0" />
     <PackageReference Include="Nethereum.Web3" Version="3.8.0" />
+    <PackageReference Include="Nethereum.ENS" Version="3.8.0" />
   </ItemGroup>
   <ProjectExtensions>
     <MonoDevelop>
