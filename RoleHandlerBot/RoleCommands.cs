@@ -100,7 +100,7 @@ namespace RoleHandlerBot
             var roles = await RoleHandler.GetAllRoles();
             roles = roles.Where(r => r.guildId == Context.Guild.Id).ToList();
             var embed = new EmbedBuilder().WithTitle("📜 Roles 📜").WithColor(Color.Blue);
-            embed.WithDescription("Delete a role handler using `$deleteRole @role`");
+            embed.WithDescription("Delete a role handler using `$deleteRole @role` [ADMIN ONLY]");
 
             int i = 1;
             foreach (var role in roles) {
@@ -141,7 +141,7 @@ namespace RoleHandlerBot
         {
             if (hash.Length == 0)
             {
-                var message = "**Paste back the value copied on your clipboard herer!\nThe value will be obtained by signing a message on the website**";
+                var message = "**Paste back the value copied on your clipboard here!\nThe value will be obtained by signing a message on the website**";
                 var embed = new EmbedBuilder().WithTitle("Follow this link to verify your address").WithDescription(message);
                 embed.WithColor(Color.DarkMagenta);
                 embed.WithUrl("https://cesarsld.github.io/NFT42VerifyPage/?" + $"discordId={Context.Message.Author.Id}&address={address}");
