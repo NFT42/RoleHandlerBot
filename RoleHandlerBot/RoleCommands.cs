@@ -130,7 +130,7 @@ namespace RoleHandlerBot
             {
                 var embed = new EmbedBuilder().WithTitle("Follow this link to verify your address").WithDescription("Please paste back the content copied on the clipboard in the website.");
                 embed.WithColor(Color.DarkMagenta);
-                embed.WithUrl("https://cesarsld.github.io/AvastarVerifyPage/?" + $"discordId={Context.Message.Author.Id}&address={address}");
+                embed.WithUrl("https://cesarsld.github.io/NFT42VerifyPage/?" + $"discordId={Context.Message.Author.Id}&address={address}");
                 await Context.Message.Author.SendMessageAsync(embed: embed.Build());
             }
             else
