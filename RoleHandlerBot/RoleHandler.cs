@@ -48,7 +48,7 @@ namespace RoleHandlerBot
             var role = guild.GetRole(RoleId);
             var roleUsers = (await guild.GetUsersAsync());
             foreach (var user in roleUsers) {
-                if (user.RoleIds.Contains(role.Id))
+                if (user.RoleIds.Contains(role.Id) && !user.IsBot)
                 {
                     if (await Blockchain.ChainWatcher.GetBalanceOf(TokenAddress, await User.GetUserAddress(user.Id)) < BigInteger.Parse(GetBN()))
                     {
