@@ -35,7 +35,8 @@ namespace RoleHandlerBot
         [Command("help")]
         public async Task GetHelp() {
             var embed = new EmbedBuilder().WithTitle("❓ Help ❓").WithColor(Color.DarkRed);
-            embed.AddField("Add a role [Admin]", "Use command `$addrole @role tokenName tokenAddress requirement decimal claimName` to add a command");
+            embed.AddField("Add a role [Admin]", "Use command `$addrole @role tokenName tokenAddress requirement decimal claimName` to add a role");
+            embed.AddField("Update a role [Admin]", "Use command `$updaterole @role requirement` to update a role rerquirement");
             embed.AddField("Remove a role [Admin]", "Use command `$deleterole @role` to remove a role");
             embed.AddField("Show all roles", "Use command `$showroles` to get a list of all roles");
             embed.AddField("Attach an address", "Use command `$verify address` and paste result from web app");
@@ -55,6 +56,18 @@ namespace RoleHandlerBot
                 return;
             }
             await RoleHandler.AddRoleHandler(Context.Guild.Id, role.Id, token, req, dec, name, tokenName);
+            await Context.Message.AddReactionAsync(new Emoji("✅"));
+        }
+
+        [Command("updaterole", RunMode = RunMode.Async)]
+        public async Task UpdateRole(IRole role, int req) {
+            if (!await IsAdmin())
+                return;
+            if (Context.Guild == null) {
+                await ReplyAsync("You must issue this command inside a server!");
+                return;
+            }
+            await RoleHandler.UpdateRoleHandler(Context.Guild.Id, role.Id, req);
             await Context.Message.AddReactionAsync(new Emoji("✅"));
         }
 
@@ -128,7 +141,8 @@ namespace RoleHandlerBot
         {
             if (hash.Length == 0)
             {
-                var embed = new EmbedBuilder().WithTitle("Follow this link to verify your address").WithDescription("Please paste back the content copied on the clipboard in the website.");
+                var message = "**Paste back the value copied on your clipboard herer!\nThe value will be obtained by signing a message on the website**";
+                var embed = new EmbedBuilder().WithTitle("Follow this link to verify your address").WithDescription(message);
                 embed.WithColor(Color.DarkMagenta);
                 embed.WithUrl("https://cesarsld.github.io/NFT42VerifyPage/?" + $"discordId={Context.Message.Author.Id}&address={address}");
                 await Context.Message.Author.SendMessageAsync(embed: embed.Build());

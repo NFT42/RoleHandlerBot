@@ -7,10 +7,13 @@ using System.Numerics;
 using RoleHandlerBot.Mongo;
 using MongoDB.Bson;
 using MongoDB.Driver;
+using MongoDB.Driver.Core;
 namespace RoleHandlerBot
 {
     public class RoleHandler
     {
+        public static bool Running = false;
+
         public ObjectId id;
         public ulong guildId;
         public ulong RoleId;
@@ -41,6 +44,9 @@ namespace RoleHandlerBot
             TokenName = tName.ToUpper();
         }
 
+        public void Update(int req) {
+            Requirement = req;
+        }
 
         public async Task CheckAllRoleReq()
         {
@@ -70,6 +76,20 @@ namespace RoleHandlerBot
             else {
                 role.Update(guildId, roleId, token, req, dec, cName, tName);
                 await collec.ReplaceOneAsync(r => r.RoleId == roleId, role);
+            }
+        }
+
+        public static async Task UpdateRoleHandler(ulong guildId, ulong roleId, int req) {
+            var collec = DatabaseConnection.GetDb().GetCollection<RoleHandler>("Roles");
+            var role = (await collec.FindAsync(r => r.RoleId == roleId)).FirstOrDefault();
+
+            if (role == null) {
+                return;
+            }
+            else {
+                role.Update(req);
+                var update = Builders<RoleHandler>.Update.Set(r => r.Requirement, req);
+                await collec.UpdateOneAsync(r => r.RoleId == role.RoleId, update);
             }
         }
 
@@ -119,7 +139,10 @@ namespace RoleHandlerBot
 
 
         public static async Task RunChecks() {
-            _ = RunDailyChecks();
+            if (!Running) {
+                Running = true;
+                _ = RunDailyChecks();
+            }
         }
 
         public string GetBN() {
