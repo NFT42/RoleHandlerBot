@@ -26,7 +26,7 @@ namespace RoleHandlerBot
             var roleIDs = user.RoleIds;
             foreach (var roleID in roleIDs) {
                 var role = Context.Guild.GetRole(roleID);
-                if (role.Name == "Avastars Corp" || role.Name.Contains("Admin"))
+                if (role.Name == "Avastars Corp" || role.Name.Contains("Admin") || role.Name.StartsWith("Mod"))
                     return true;
             }
             return false;
