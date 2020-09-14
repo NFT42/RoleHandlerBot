@@ -85,9 +85,9 @@ namespace RoleHandlerBot
             await Context.Message.AddReactionAsync(new Emoji("✅"));
         }
 
-        [Command("TestRun", RunMode = RunMode.Async)]
-        public async Task TestRun() {
-
+        [Command("ens", RunMode = RunMode.Async)]
+        public async Task TestRun(string ens) {
+            await ReplyAsync(await Blockchain.Utils.GetENSAddress(ens));
             //await RoleHandler.CheckAllRolesReq();
             //Console.WriteLine("");
         }
@@ -95,8 +95,6 @@ namespace RoleHandlerBot
         [Command("showRoles", RunMode = RunMode.Async)]
         public async Task ShowRoles()
         {
-            if (! await IsAdmin())
-                return;
             var roles = await RoleHandler.GetAllRoles();
             roles = roles.Where(r => r.guildId == Context.Guild.Id).ToList();
             var embed = new EmbedBuilder().WithTitle("📜 Roles 📜").WithColor(Color.Blue);
