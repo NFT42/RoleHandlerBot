@@ -35,12 +35,12 @@ namespace RoleHandlerBot
         [Command("help")]
         public async Task GetHelp() {
             var embed = new EmbedBuilder().WithTitle("❓ Help ❓").WithColor(Color.DarkRed);
-            embed.AddField("Add a role [Admin]", "Use command `$addrole @role tokenName tokenAddress requirement decimal claimName` to add a role");
-            embed.AddField("Update a role [Admin]", "Use command `$updaterole @role requirement` to update a role rerquirement");
-            embed.AddField("Remove a role [Admin]", "Use command `$deleterole @role` to remove a role");
-            embed.AddField("Show all roles", "Use command `$showroles` to get a list of all roles");
-            embed.AddField("Attach an address", "Use command `$verify address` and paste result from web app");
-            embed.AddField("Claim a role", "Use command `$claim claimName` to claim a role if you meet requirements");
+            embed.AddField("Add a role [Admin]", "Use command `!addrole @role tokenName tokenAddress requirement decimal claimName` to add a role");
+            embed.AddField("Update a role [Admin]", "Use command `!updaterole @role requirement` to update a role rerquirement");
+            embed.AddField("Remove a role [Admin]", "Use command `!deleterole @role` to remove a role");
+            embed.AddField("Show all roles", "Use command `!showroles` to get a list of all roles");
+            embed.AddField("Attach an address", "Use command `!verify address` and paste result from web app");
+            embed.AddField("Claim a role", "Use command `!claim claimName` to claim a role if you meet requirements");
             await ReplyAsync(embed: embed.Build());
 
         }
@@ -98,12 +98,12 @@ namespace RoleHandlerBot
             var roles = await RoleHandler.GetAllRoles();
             roles = roles.Where(r => r.guildId == Context.Guild.Id).ToList();
             var embed = new EmbedBuilder().WithTitle("📜 Roles 📜").WithColor(Color.Blue);
-            embed.WithDescription("Delete a role handler using `$deleteRole @role` [ADMIN ONLY]");
+            embed.WithDescription("Delete a role handler using `!deleteRole @role` [ADMIN ONLY]");
 
             int i = 1;
             foreach (var role in roles) {
                 var mention = Context.Guild.GetRole(role.RoleId).Mention;
-                embed.AddField($"{i}. Requirement: {role.Requirement} {role.TokenName}", $"{mention} | type `$claim {role.ClaimName}` to claim");
+                embed.AddField($"{i}. Requirement: {role.Requirement} {role.TokenName}", $"{mention} | type `!claim {role.ClaimName}` to claim");
             }
             await ReplyAsync(embed: embed.Build());
         }
@@ -121,7 +121,7 @@ namespace RoleHandlerBot
             }
             var add = await User.GetUserAddress(Context.Message.Author.Id);
             if (add.Length == 0) {
-                await ReplyAsync("User has not binded an address. Please Bind an address using command `$verify your_address` example `$verify 0x123456789abcdefABCDEF9876543210123456789`");
+                await ReplyAsync("User has not binded an address. Please Bind an address using command `!verify your_address` example `!verify 0x123456789abcdefABCDEF9876543210123456789`");
                 return;
             } 
             if (await Blockchain.ChainWatcher.GetBalanceOf(role.TokenAddress, add) >= BigInteger.Parse(role.GetBN()))
