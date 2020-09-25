@@ -46,7 +46,7 @@ namespace RoleHandlerBot
         }
 
         [Command("AddRole", RunMode = RunMode.Async)]
-        public async Task AddRole(IRole role, string tokenName, string token, int req, int dec, string name)
+        public async Task AddRole(IRole role, string tokenName, string token, string req, int dec, string name)
         {
             if (!await IsAdmin())
                 return;
@@ -55,12 +55,16 @@ namespace RoleHandlerBot
                 await ReplyAsync("You must issue this command inside a server!");
                 return;
             }
-            await RoleHandler.AddRoleHandler(Context.Guild.Id, role.Id, token, req, dec, name, tokenName);
-            await Context.Message.AddReactionAsync(new Emoji("✅"));
+            if (BigNumber.IsValidValue(req, dec)) {
+                await RoleHandler.AddRoleHandler(Context.Guild.Id, role.Id, token, req, dec, name, tokenName);
+                await Context.Message.AddReactionAsync(new Emoji("✅"));
+            }
+            else
+                await ReplyAsync("Wrong token value in respect to decimals");
         }
 
         [Command("updaterole", RunMode = RunMode.Async)]
-        public async Task UpdateRole(IRole role, int req) {
+        public async Task UpdateRole(IRole role, string req) {
             if (!await IsAdmin())
                 return;
             if (Context.Guild == null) {
@@ -103,7 +107,7 @@ namespace RoleHandlerBot
             int i = 1;
             foreach (var role in roles) {
                 var mention = Context.Guild.GetRole(role.RoleId).Mention;
-                embed.AddField($"{i}. Requirement: {role.Requirement} {role.TokenName}", $"{mention} | type `!claim {role.ClaimName}` to claim");
+                embed.AddField($"{i}. Requirement: {BigNumber.FormatUint(role.Requirement, role.tokenDecimal)} {role.TokenName}", $"{mention} | type `!claim {role.ClaimName}` to claim");
             }
             await ReplyAsync(embed: embed.Build());
         }

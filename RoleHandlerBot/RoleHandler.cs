@@ -19,11 +19,11 @@ namespace RoleHandlerBot
         public ulong RoleId;
         public string TokenAddress;
         public string TokenName;
-        public int Requirement;
+        public string Requirement;
         public int tokenDecimal;
         public string ClaimName;
 
-        public RoleHandler(ulong gId, ulong rId, string tAd, int req, int dec, string cName, string tName) {
+        public RoleHandler(ulong gId, ulong rId, string tAd, string req, int dec, string cName, string tName) {
             id = ObjectId.GenerateNewId();
             guildId = gId;
             RoleId = rId;
@@ -34,7 +34,7 @@ namespace RoleHandlerBot
             TokenName = tName.ToUpper();
         }
 
-        public void Update(ulong gId, ulong rId, string tAd, int req, int dec, string cName, string tName) {
+        public void Update(ulong gId, ulong rId, string tAd, string req, int dec, string cName, string tName) {
             guildId = gId;
             RoleId = rId;
             TokenAddress = tAd;
@@ -44,7 +44,7 @@ namespace RoleHandlerBot
             TokenName = tName.ToUpper();
         }
 
-        public void Update(int req) {
+        public void Update(string req) {
             Requirement = req;
         }
 
@@ -66,12 +66,12 @@ namespace RoleHandlerBot
             }
         }
 
-        public static async Task AddRoleHandler(ulong guildId, ulong roleId, string token, int req, int dec, string cName, string tName) {
+        public static async Task AddRoleHandler(ulong guildId, ulong roleId, string token, string req, int dec, string cName, string tName) {
             var collec = DatabaseConnection.GetDb().GetCollection<RoleHandler>("Roles");
             var role = (await collec.FindAsync(r => r.RoleId == roleId)).FirstOrDefault();
 
             if (role == null) {
-                await collec.InsertOneAsync(new RoleHandler(guildId, roleId, token, req, dec, cName, tName));
+                await collec.InsertOneAsync(new RoleHandler(guildId, roleId, token, BigNumber.ParseValueToTokenDecimal(req, dec), dec, cName, tName));
             }
             else {
                 role.Update(guildId, roleId, token, req, dec, cName, tName);
@@ -79,7 +79,7 @@ namespace RoleHandlerBot
             }
         }
 
-        public static async Task UpdateRoleHandler(ulong guildId, ulong roleId, int req) {
+        public static async Task UpdateRoleHandler(ulong guildId, ulong roleId, string req) {
             var collec = DatabaseConnection.GetDb().GetCollection<RoleHandler>("Roles");
             var role = (await collec.FindAsync(r => r.RoleId == roleId)).FirstOrDefault();
 
@@ -87,9 +87,11 @@ namespace RoleHandlerBot
                 return;
             }
             else {
-                role.Update(req);
-                var update = Builders<RoleHandler>.Update.Set(r => r.Requirement, req);
-                await collec.UpdateOneAsync(r => r.RoleId == role.RoleId, update);
+                if (BigNumber.IsValidValue(req, role.tokenDecimal)) {
+                    role.Update(BigNumber.ParseValueToTokenDecimal(req, role.tokenDecimal));
+                    var update = Builders<RoleHandler>.Update.Set(r => r.Requirement, role.Requirement);
+                    await collec.UpdateOneAsync(r => r.RoleId == role.RoleId, update);
+                }
             }
         }
 
@@ -146,8 +148,8 @@ namespace RoleHandlerBot
         }
 
         public string GetBN() {
-            var str = Requirement.ToString();
-            str = str.PadRight(str.Length + tokenDecimal, '0');
+            var str = Requirement;
+            //str = str.PadRight(str.Length + tokenDecimal, '0');
             return str;
         }
     }
