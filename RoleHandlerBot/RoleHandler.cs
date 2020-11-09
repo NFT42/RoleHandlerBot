@@ -50,19 +50,23 @@ namespace RoleHandlerBot
 
         public async Task CheckAllRoleReq()
         {
-            var guild = Bot.DiscordClient.GetGuild(guildId) as IGuild;
-            var role = guild.GetRole(RoleId);
-            var roleUsers = (await guild.GetUsersAsync());
-            foreach (var user in roleUsers) {
-                if (user.RoleIds.Contains(role.Id) && !user.IsBot)
-                {
-                    if (await Blockchain.ChainWatcher.GetBalanceOf(TokenAddress, await User.GetUserAddress(user.Id)) < BigInteger.Parse(GetBN()))
-                    {
-                        await user.RemoveRoleAsync(role);
-                        await user.SendMessageAsync($"Hello!\nYour role `{role.Name}` in the `{guild.Name}` was removed as your token balance went below the requirement of {BigNumber.FormatUint(Requirement, tokenDecimal)} {TokenName.ToUpper()}."
-                            + "To reclaim the role, please make sure to make the minimum requirement in your wallet!");
+            try {
+                var guild = Bot.DiscordClient.GetGuild(guildId) as IGuild;
+                var role = guild.GetRole(RoleId);
+                var roleUsers = (await guild.GetUsersAsync());
+                Console.WriteLine($"Checking requirements for {role.Name}");
+                foreach (var user in roleUsers) {
+                    if (user.RoleIds.Contains(role.Id) && !user.IsBot) {
+                        if (await Blockchain.ChainWatcher.GetBalanceOf(TokenAddress, await User.GetUserAddress(user.Id)) < BigInteger.Parse(GetBN())) {
+                            await user.RemoveRoleAsync(role);
+                            await user.SendMessageAsync($"Hello!\nYour role `{role.Name}` in the `{guild.Name}` was removed as your token balance went below the requirement of {BigNumber.FormatUint(Requirement, tokenDecimal)} {TokenName.ToUpper()}."
+                                + "To reclaim the role, please make sure to make the minimum requirement in your wallet!");
+                        }
                     }
                 }
+            }
+            catch(Exception e) {
+                Console.WriteLine(e.Message);
             }
         }
 
