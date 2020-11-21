@@ -15,6 +15,15 @@ namespace RoleHandlerBot.Blockchain
     {
         public static string web3Url = "https://mainnet.infura.io/v3/b4e2781f02a94a5a96dcf8ce8cab9449";
 
+        public static async Task<string> GetOwnerOf(string tokenAddress, BigInteger id) {
+            Web3 web3;
+            web3 = new Web3("https://mainnet.infura.io/v3/b4e2781f02a94a5a96dcf8ce8cab9449");
+            var handler = web3.Eth.GetContractQueryHandler<OwnerOfFunction>();
+            var param = new OwnerOfFunction() { Id = id };
+            var balance = await handler.QueryAsync<string>(tokenAddress, param);
+            return balance;
+        }
+
         public static async Task<BigInteger> GetBalanceOf(string tokenAddress, string owner)
         {
             Web3 web3;
@@ -57,6 +66,12 @@ namespace RoleHandlerBot.Blockchain
     {
         [Parameter("address")]
         public string Owner { get; set; }
+    }
+
+    [Function("ownerOf", "address")]
+    public class OwnerOfFunction : FunctionMessage {
+        [Parameter("uint256")]
+        public BigInteger Id { get; set; }
     }
 
     [Function("decimals", "uint128")]

@@ -139,35 +139,12 @@ namespace RoleHandlerBot
         }
 
         [Command("verify")]
-        public async Task BindWallet(string address, string hash = "")
-        {
-            if (hash.Length == 0)
-            {
-                if (address.EndsWith(".eth")) {
-                    address = await Blockchain.Utils.GetENSAddress(address);
-                    if (address == null || address == "0x0000000000000000000000000000000000000000") {
-                        await ReplyAsync("Error: could not find ens domain.");
-                        return;
-                    }
-                }
-                var message = "**Paste back the value copied on your clipboard here!\nThe value will be obtained by signing a message on the website**";
-                var embed = new EmbedBuilder().WithTitle("Follow this link to verify your address").WithDescription(message);
-                embed.WithColor(Color.DarkMagenta);
-                embed.WithUrl("https://cesarsld.github.io/NFT42VerifyPage/?" + $"discordId={Context.Message.Author.Id}&address={address}");
-                await Context.Message.Author.SendMessageAsync(embed: embed.Build());
-            }
-            else
-            {
-                if (Blockchain.Utils.IsSignatureValid(hash, address, $"DiscordId = {Context.Message.Author.Id}\nUserAddress = {address}"))
-                {
-                    await User.LogUser(Context.Message.Author.Id, address);
-                    await ReplyAsync("Binded address to Discord account!");
-                }
-                else
-                {
-                    await ReplyAsync("Error: wrong signature!");
-                }
-            }
+        public async Task BindWallet() {
+            var message = "**Follow this link to verify your ethereum address**";
+            var embed = new EmbedBuilder().WithTitle("Follow this link to verify your address").WithDescription(message);
+            embed.WithColor(Color.DarkMagenta);
+            embed.WithUrl("https://discord.com/api/oauth2/authorize?client_id=778946094804762644&redirect_uri=https%3A%2F%2Fnft42-next.vercel.app%2F&response_type=code&scope=identify");
+            await Context.Message.Author.SendMessageAsync(embed: embed.Build());
         }
 
     }
