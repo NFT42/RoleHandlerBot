@@ -39,7 +39,7 @@ namespace RoleHandlerBot
             embed.AddField("Update a role [Admin]", "Use command `!updaterole @role requirement` to update a role rerquirement");
             embed.AddField("Remove a role [Admin]", "Use command `!deleterole @role` to remove a role");
             embed.AddField("Show all roles", "Use command `!showroles` to get a list of all roles");
-            embed.AddField("Attach an address", "Use command `!verify address` and paste result from web app");
+            embed.AddField("Attach an address", "Use command `!verify` and paste result from web app");
             embed.AddField("Claim a role", "Use command `!claim claimName` to claim a role if you meet requirements");
             await ReplyAsync(embed: embed.Build());
 
