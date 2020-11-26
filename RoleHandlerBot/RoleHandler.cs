@@ -134,6 +134,8 @@ namespace RoleHandlerBot
             try{
                 while (true) {
                     await CheckAllRolesReq();
+                    await NFTRoleHandler.CheckAllRolesReq();
+                    Console.WriteLine("Done checking");
                     await Task.Delay(1000 * 3600 * 24);
                 }
             }
