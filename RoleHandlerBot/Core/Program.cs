@@ -12,6 +12,7 @@ namespace RoleHandlerBot
         {
             Mongo.DatabaseConnection.DatabaseName = "RoleHandlerDatabase";
             Mongo.DatabaseConnection.MongoUrl = args[0];
+            Blockchain.OpenSea.api = args[4];
             if (args[1].ToLower() == "prod")
                 IsRelease = true;
             RunBot(token: args[2], prefix: args[3]);

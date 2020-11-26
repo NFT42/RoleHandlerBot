@@ -36,8 +36,11 @@ namespace RoleHandlerBot
         public async Task GetHelp() {
             var embed = new EmbedBuilder().WithTitle("❓ Help ❓").WithColor(Color.DarkRed);
             embed.AddField("Add a role [Admin]", "Use command `!addrole @role tokenName tokenAddress requirement decimal claimName` to add a role");
+            embed.AddField("Add an NFT role [Admin]", "Use command `!addnftrole @role nftName nftAddress \"hold\" holdValue \"range\"(optional) [a;b](optional) claimName` to add an nft role\n" +
+                "Example:\n`!addnftrole @yourRole AVASTAR AVASTAR 0xf3e778f839934fc819cfa1040aabacecba01e049 hold 2 range [200;25200] claimava`\n" +
+                "`?addnftrole @nftaxie AXIE 0xf5b0a3efb8e8e4c201e2a935f110eaaf3ffecb8d hold 5 claimaxie`");
             embed.AddField("Update a role [Admin]", "Use command `!updaterole @role requirement` to update a role rerquirement");
-            embed.AddField("Remove a role [Admin]", "Use command `!deleterole @role` to remove a role");
+            embed.AddField("Remove a role [Admin]", "Use command `!deleterole @role` or `!deletenftrole @role` to remove a role");
             embed.AddField("Show all roles", "Use command `!showroles` to get a list of all roles");
             embed.AddField("Attach an address", "Use command `!verify` and paste result from web app");
             embed.AddField("Claim a role", "Use command `!claim claimName` to claim a role if you meet requirements");
@@ -61,6 +64,55 @@ namespace RoleHandlerBot
             }
             else
                 await ReplyAsync("Wrong token value in respect to decimals");
+        }
+
+        [Command("AddNFTRole", RunMode = RunMode.Async)]
+        public async Task AddNFTRole(IRole role, params string[] input) {
+            if (!await IsAdmin())
+                return;
+            if (Context.Guild == null) {
+                await ReplyAsync("You must issue this command inside a server!");
+                return;
+            }
+            if (input.Length > 7)
+                return;
+            var tokenName = input[0];
+            var nftAddress = input[1];
+            var reqType = input[2];
+            var value = Convert.ToInt32(input[3]);
+            var claimName = input[input.Length - 1];
+            var inRange = "";
+            var rangeValue = "";
+            NFTReqType type = NFTReqType.HoldX;
+            var min = 0;
+            var max = 0;
+            if (reqType.ToLower().StartsWith("hold")) {
+                type = NFTReqType.HoldX;
+
+            }
+            if (input.Length > 5) {
+                inRange = input[4];
+                rangeValue = input[5];
+                if (inRange.ToLower() == "range") {
+                    if (rangeValue[0] == '[' && rangeValue[rangeValue.Length - 1] == ']') {
+                        rangeValue = rangeValue.Substring(1, rangeValue.Length - 2);
+                        var arr = rangeValue.Split(';');
+                        if (arr.Length == 2 && int.TryParse(arr[0], out min) && int.TryParse(arr[1], out max) && min < max) {
+                            type = NFTReqType.InRange;
+                        }
+                        else {
+                            await ReplyAsync("Wrong range format");
+                            return;
+                        }
+                    }
+                    else {
+                        await ReplyAsync("Wrong range format");
+                        return;
+                    }
+                }
+            }
+                    await NFTRoleHandler.AddRoleHandler(Context.Guild.Id, role.Id, nftAddress, type, claimName, tokenName, value, min, max);
+                    await Context.Message.AddReactionAsync(new Emoji("✅"));
         }
 
         [Command("updaterole", RunMode = RunMode.Async)]
@@ -89,11 +141,21 @@ namespace RoleHandlerBot
             await Context.Message.AddReactionAsync(new Emoji("✅"));
         }
 
+        [Command("DeletenftRole", RunMode = RunMode.Async)]
+        public async Task DeleteNFTRole(IRole role) {
+            if (!await IsAdmin())
+                return;
+            if (Context.Guild == null) {
+                await ReplyAsync("You must issue this command inside a server!");
+                return;
+            }
+            await NFTRoleHandler.RemoveRoleHandler(role.Id);
+            await Context.Message.AddReactionAsync(new Emoji("✅"));
+        }
+
         [Command("ens", RunMode = RunMode.Async)]
         public async Task TestRun(string ens) {
             await ReplyAsync(await Blockchain.Utils.GetENSAddress(ens));
-            //await RoleHandler.CheckAllRolesReq();
-            //Console.WriteLine("");
         }
 
         [Command("showRoles", RunMode = RunMode.Async)]
@@ -102,19 +164,30 @@ namespace RoleHandlerBot
             var roles = await RoleHandler.GetAllRoles();
             roles = roles.Where(r => r.guildId == Context.Guild.Id).ToList();
             var embed = new EmbedBuilder().WithTitle("📜 Roles 📜").WithColor(Color.Blue);
-            embed.WithDescription("Delete a role handler using `!deleteRole @role` [ADMIN ONLY]");
+            embed.WithDescription("Delete a role handler using `!deleteRole @role`or `!deleteNFTRoles @role` [ADMIN ONLY]");
 
             int i = 1;
             foreach (var role in roles) {
                 var mention = Context.Guild.GetRole(role.RoleId).Mention;
-                embed.AddField($"{i}. Requirement: {BigNumber.FormatUint(role.Requirement, role.tokenDecimal)} {role.TokenName}", $"{mention} | type `!claim {role.ClaimName}` to claim");
+                embed.AddField($"{i++}. Requirement: {BigNumber.FormatUint(role.Requirement, role.tokenDecimal)} {role.TokenName}", $"{mention} | type `!claim {role.ClaimName}` to claim");
+            }
+
+            var nftRoles = await NFTRoleHandler.GetAllRoles();
+            nftRoles = nftRoles.Where(r => r.guildId == Context.Guild.Id).ToList();
+            foreach (var role in nftRoles) {
+                var mention = Context.Guild.GetRole(role.RoleId).Mention;
+                var range = role.RequirementType == NFTReqType.InRange ? $" in range [{role.MinRange};{role.MaxRange}]" : "";
+                embed.AddField($"{i++}. Requirement: hold {role.HoldXValue} {role.TokenName}{range}", $"{mention} | type `!claim {role.ClaimName}` to claim");
             }
             await ReplyAsync(embed: embed.Build());
         }
 
-        [Command("claim")]
+        [Command("claim", RunMode = RunMode.Async)]
         public async Task ClaimeRole(string claim)
         {
+            var nftRole = await NFTRoleHandler.GetRoleByClaimName(claim);
+            if (nftRole != null)
+                await ClaimNFTRole(nftRole);
             var role = await RoleHandler.GetRoleByClaimName(claim);
             if (role == null)
                 return;
@@ -125,11 +198,43 @@ namespace RoleHandlerBot
             }
             var add = await User.GetUserAddress(Context.Message.Author.Id);
             if (add.Length == 0) {
-                await ReplyAsync("User has not binded an address. Please Bind an address using command `!verify your_address` example `!verify 0x123456789abcdefABCDEF9876543210123456789`");
+                await ReplyAsync("User has not binded an address. Please Bind an address using command `!verify`");
                 return;
             } 
             if (await Blockchain.ChainWatcher.GetBalanceOf(role.TokenAddress, add) >= BigInteger.Parse(role.GetBN()))
             {
+                var user = Context.Message.Author as SocketGuildUser;
+                await user.AddRoleAsync(Context.Guild.GetRole(role.RoleId));
+                await Context.Message.AddReactionAsync(new Emoji("✅"));
+            }
+            else
+                await Context.Message.AddReactionAsync(new Emoji("❌"));
+        }
+
+        public async Task ClaimNFTRole(NFTRoleHandler role) {
+            if (Context.Guild == null || Context.Guild.Id != role.guildId) {
+                await ReplyAsync("Please use command in the correct server.");
+                return;
+            }
+            var add = await User.GetUserAddress(Context.Message.Author.Id);
+            if (add.Length == 0) {
+                await ReplyAsync("User has not binded an address. Please Bind an address using command `!verify`");
+                return;
+            }
+            await Context.Message.AddReactionAsync(Emote.Parse("<a:loading:726356725648719894>"));
+            var eligible = false;
+            switch (role.RequirementType) {
+                case NFTReqType.HoldX:
+                    eligible = await Blockchain.ChainWatcher.GetBalanceOf(role.NFTAddress, add) >= role.HoldXValue;
+                    break;
+                case NFTReqType.InRange:
+                    eligible = (await Blockchain.OpenSea.CheckNFTInRange(add, role.NFTAddress, role.MinRange, role.MaxRange, role.HoldXValue));
+                    break;
+                case NFTReqType.Custom:
+                    break;
+            }
+            await Context.Message.RemoveReactionAsync(Emote.Parse("<a:loading:726356725648719894>"), Context.Client.CurrentUser.Id);
+            if (eligible) {
                 var user = Context.Message.Author as SocketGuildUser;
                 await user.AddRoleAsync(Context.Guild.GetRole(role.RoleId));
                 await Context.Message.AddReactionAsync(new Emoji("✅"));

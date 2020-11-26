@@ -39,6 +39,7 @@ namespace RoleHandlerBot
             DiscordClient.Log += Logger.Log;
             DiscordClient.MessageReceived += HandleCommandAsync;
             DiscordClient.Ready += RoleHandler.RunChecks;
+            DiscordClient.Ready += NFTRoleHandler.RunChecks;
         }
 
         ~Bot()

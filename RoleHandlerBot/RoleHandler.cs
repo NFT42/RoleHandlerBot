@@ -140,7 +140,6 @@ namespace RoleHandlerBot
             catch (Exception e){
                 Logger.Log("Run check error : " + e.Message);
             }
-
         }
 
 
