@@ -26,6 +26,8 @@ namespace RoleHandlerBot
             var roleIDs = user.RoleIds;
             foreach (var roleID in roleIDs) {
                 var role = Context.Guild.GetRole(roleID);
+                if (role.Permissions.Administrator)
+                    return true;
                 if (role.Name == "Avastars Corp" || role.Name.ToLower().Contains("admin") || role.Name.ToLower().Contains("mod"))
                     return true;
             }
@@ -37,8 +39,8 @@ namespace RoleHandlerBot
             var embed = new EmbedBuilder().WithTitle("❓ Help ❓").WithColor(Color.DarkRed);
             embed.AddField("Add a role [Admin]", "Use command `!addrole @role tokenName tokenAddress requirement decimal claimName` to add a role");
             embed.AddField("Add an NFT role [Admin]", "Use command `!addnftrole @role nftName nftAddress \"hold\" holdValue \"range\"(optional) [a;b](optional) claimName` to add an nft role\n" +
-                "Example:\n`!addnftrole @yourRole AVASTAR AVASTAR 0xf3e778f839934fc819cfa1040aabacecba01e049 hold 2 range [200;25200] claimava`\n" +
-                "`?addnftrole @nftaxie AXIE 0xf5b0a3efb8e8e4c201e2a935f110eaaf3ffecb8d hold 5 claimaxie`");
+                "Example:\n`!addnftrole @yourRole AVASTAR 0xf3e778f839934fc819cfa1040aabacecba01e049 hold 2 range [200;25200] claimava`\n" +
+                "`!addnftrole @nftaxie AXIE 0xf5b0a3efb8e8e4c201e2a935f110eaaf3ffecb8d hold 5 claimaxie`");
             embed.AddField("Update a role [Admin]", "Use command `!updaterole @role requirement` to update a role rerquirement");
             embed.AddField("Remove a role [Admin]", "Use command `!deleterole @role` or `!deletenftrole @role` to remove a role");
             embed.AddField("Show all roles", "Use command `!showroles` to get a list of all roles");
@@ -185,7 +187,7 @@ namespace RoleHandlerBot
         [Command("claim", RunMode = RunMode.Async)]
         public async Task ClaimeRole(string claim)
         {
-            var nftRole = await NFTRoleHandler.GetRoleByClaimName(claim);
+            var nftRole = await NFTRoleHandler.GetRoleByClaimName(claim, Context.Guild.Id);
             if (nftRole != null)
                 await ClaimNFTRole(nftRole);
             var role = await RoleHandler.GetRoleByClaimName(claim);

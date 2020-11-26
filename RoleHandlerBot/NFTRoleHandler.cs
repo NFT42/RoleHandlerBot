@@ -149,9 +149,9 @@ namespace RoleHandlerBot {
             return role;
         }
 
-        public static async Task<NFTRoleHandler> GetRoleByClaimName(string claim) {
+        public static async Task<NFTRoleHandler> GetRoleByClaimName(string claim, ulong guildId) {
             var collec = DatabaseConnection.GetDb().GetCollection<NFTRoleHandler>("NFTRoles");
-            var role = (await collec.FindAsync(r => r.ClaimName == claim.ToLower())).FirstOrDefault();
+            var role = (await collec.FindAsync(r => r.ClaimName == claim.ToLower() && r.guildId == guildId)).FirstOrDefault();
             return role;
         }
 
@@ -166,27 +166,6 @@ namespace RoleHandlerBot {
             var roles = await (await collec.FindAsync(r => true)).ToListAsync();
             foreach (var role in roles)
                 await role.CheckAllRoleReq();
-        }
-
-
-        public static async Task RunDailyChecks() {
-            try {
-                while (true) {
-                    await CheckAllRolesReq();
-                    await Task.Delay(1000 * 3600 * 24);
-                }
-            }
-            catch (Exception e) {
-                Logger.Log("Run check error : " + e.Message);
-            }
-        }
-
-
-        public static async Task RunChecks() {
-            if (!Running) {
-                Running = true;
-                _ = RunDailyChecks();
-            }
         }
     }
 }

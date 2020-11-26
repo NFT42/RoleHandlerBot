@@ -133,6 +133,7 @@ namespace RoleHandlerBot
         public static async Task RunDailyChecks() {
             try{
                 while (true) {
+                    Console.WriteLine("Start checking");
                     await CheckAllRolesReq();
                     await NFTRoleHandler.CheckAllRolesReq();
                     Console.WriteLine("Done checking");
