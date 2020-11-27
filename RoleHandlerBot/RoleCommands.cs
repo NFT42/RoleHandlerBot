@@ -198,13 +198,19 @@ namespace RoleHandlerBot
                 await ReplyAsync("Please use command in the correct server.");
                 return;
             }
-            var add = await User.GetUserAddress(Context.Message.Author.Id);
-            if (add.Length == 0) {
+            var addresses = await User.GetUserAddresses(Context.Message.Author.Id);
+            if (addresses.Count == 0) {
                 await ReplyAsync("User has not binded an address. Please Bind an address using command `!verify`");
                 return;
-            } 
-            if (await Blockchain.ChainWatcher.GetBalanceOf(role.TokenAddress, add) >= BigInteger.Parse(role.GetBN()))
-            {
+            }
+            var give = false;
+            foreach (var add in addresses)
+                if (await Blockchain.ChainWatcher.GetBalanceOf(role.TokenAddress, add) >= BigInteger.Parse(role.GetBN()))
+                {
+                    give = true;
+                    break;
+                }
+            if (give) {
                 var user = Context.Message.Author as SocketGuildUser;
                 await user.AddRoleAsync(Context.Guild.GetRole(role.RoleId));
                 await Context.Message.AddReactionAsync(new Emoji("✅"));
@@ -218,21 +224,25 @@ namespace RoleHandlerBot
                 await ReplyAsync("Please use command in the correct server.");
                 return;
             }
-            var add = await User.GetUserAddress(Context.Message.Author.Id);
-            if (add.Length == 0) {
+            var addresses = await User.GetUserAddresses(Context.Message.Author.Id);
+            if (addresses.Count == 0) {
                 await ReplyAsync("User has not binded an address. Please Bind an address using command `!verify`");
                 return;
             }
             await Context.Message.AddReactionAsync(Emote.Parse("<a:loading:726356725648719894>"));
             var eligible = false;
-            switch (role.RequirementType) {
-                case NFTReqType.HoldX:
-                    eligible = await Blockchain.ChainWatcher.GetBalanceOf(role.NFTAddress, add) >= role.HoldXValue;
-                    break;
-                case NFTReqType.InRange:
-                    eligible = (await Blockchain.OpenSea.CheckNFTInRange(add, role.NFTAddress, role.MinRange, role.MaxRange, role.HoldXValue));
-                    break;
-                case NFTReqType.Custom:
+            foreach (var add in addresses) {
+                switch (role.RequirementType) {
+                    case NFTReqType.HoldX:
+                        eligible = await Blockchain.ChainWatcher.GetBalanceOf(role.NFTAddress, add) >= role.HoldXValue;
+                        break;
+                    case NFTReqType.InRange:
+                        eligible = (await Blockchain.OpenSea.CheckNFTInRange(add, role.NFTAddress, role.MinRange, role.MaxRange, role.HoldXValue));
+                        break;
+                    case NFTReqType.Custom:
+                        break;
+                }
+                if (eligible)
                     break;
             }
             await Context.Message.RemoveReactionAsync(Emote.Parse("<a:loading:726356725648719894>"), Context.Client.CurrentUser.Id);

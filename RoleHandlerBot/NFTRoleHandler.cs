@@ -81,17 +81,21 @@ namespace RoleHandlerBot {
                 foreach (var user in roleUsers) {
                     if (user.RoleIds.Contains(role.Id) && !user.IsBot) {
                         bool qualifies = true;
-                        var ownerAddress = await User.GetUserAddress(user.Id);
-                        switch (RequirementType) {
-                            case NFTReqType.HoldX:
-                                if (await Blockchain.ChainWatcher.GetBalanceOf(NFTAddress, ownerAddress) < HoldXValue)
+                        var ownerAddresses = await User.GetUserAddresses(user.Id);
+                        foreach (var ownerAddress in ownerAddresses) {
+                            switch (RequirementType) {
+                                case NFTReqType.HoldX:
+                                    if (await Blockchain.ChainWatcher.GetBalanceOf(NFTAddress, ownerAddress) < HoldXValue)
                                         qualifies = false;
-                                break;
-                            case NFTReqType.InRange:
-                                qualifies = (await Blockchain.OpenSea.CheckNFTInRange(ownerAddress, NFTAddress, MinRange, MaxRange, HoldXValue));
-                                break;
-                            case NFTReqType.Custom:
-                                qualifies = true;
+                                    break;
+                                case NFTReqType.InRange:
+                                    qualifies = (await Blockchain.OpenSea.CheckNFTInRange(ownerAddress, NFTAddress, MinRange, MaxRange, HoldXValue));
+                                    break;
+                                case NFTReqType.Custom:
+                                    qualifies = true;
+                                    break;
+                            }
+                            if (qualifies)
                                 break;
                         }
                         if (!qualifies) {

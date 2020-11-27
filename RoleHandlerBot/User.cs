@@ -6,28 +6,23 @@ using System.Linq;
 using MongoDB.Driver;
 namespace RoleHandlerBot
 {
-    public class User
-    {
+    public class OldUser {
         public ulong id;
         public string address;
-        public User(ulong _id, string _address)
-        {
+        public OldUser(ulong _id, string _address) {
             id = _id;
             address = _address;
         }
-
-        public static async Task LogUser(ulong id, string address)
+    }
+    
+    public class User
+    {
+        public ulong id;
+        public List<string> addresses;
+        public User(ulong _id, List<string> _address)
         {
-            var collec = DatabaseConnection.GetDb().GetCollection<User>("Users");
-            var user = (await collec.FindAsync(u => u.id == id)).FirstOrDefault();
-            if (user == null)
-            {
-                await collec.InsertOneAsync(new User(id, address));
-            }
-            else
-            {
-                await collec.FindOneAndReplaceAsync(u => u.id == id, new User(id, address));
-            }
+            id = _id;
+            addresses = _address;
         }
 
         public static async Task<List<User>> GetAllUsers()
@@ -44,12 +39,23 @@ namespace RoleHandlerBot
             return user;
         }
 
-        public static async Task<string> GetUserAddress(ulong id)
+        public static async Task<List<string>> GetUserAddresses(ulong id)
         {
             var user = await GetUser(id);
             if (user == null)
-                return "";
-            return (user).address;
+                return null;
+            return user.addresses;
+        }
+
+        public static async Task MigrateAllUsers() {
+            var collec = DatabaseConnection.GetDb().GetCollection<OldUser>("Users");
+            var users = (await collec.FindAsync(u => true)).ToList();
+            await collec.DeleteManyAsync(u => true);
+            var newUsers = new List<User>();
+            foreach (var user in users)
+                newUsers.Add(new User(user.id, new List<string>() { user.address}));
+            var collecNew = DatabaseConnection.GetDb().GetCollection<User>("Users");
+            await collecNew.InsertManyAsync(newUsers);
         }
     }
 }
