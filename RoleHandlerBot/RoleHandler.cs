@@ -51,16 +51,15 @@ namespace RoleHandlerBot
         public async Task CheckAllRoleReq()
         {
             try {
-                Console.WriteLine("Fetching guild\n");
                 var guild = Bot.DiscordClient.GetGuild(guildId) as IGuild;
-                Console.WriteLine("Fetching role\n");
                 var role = guild.GetRole(RoleId);
-                Console.WriteLine("Fetching role holders\n");
                 var roleUsers = (await guild.GetUsersAsync());
                 Console.WriteLine($"Checking requirements for {role.Name}");
                 foreach (var user in roleUsers) {
                     if (user.RoleIds.Contains(role.Id) && !user.IsBot) {
                         var addresses = await User.GetUserAddresses(user.Id);
+                        if (addresses == null)
+                            continue;
                         var remove = true;
                         foreach (var address in addresses)
                             if (await Blockchain.ChainWatcher.GetBalanceOf(TokenAddress, address) >= BigInteger.Parse(GetBN())) {
