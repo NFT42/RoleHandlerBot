@@ -165,6 +165,12 @@ namespace RoleHandlerBot {
             return roles;
         }
 
+        public static async Task<List<NFTRoleHandler>> GetAllRolesByGuild(ulong guildId) {
+            var collec = DatabaseConnection.GetDb().GetCollection<NFTRoleHandler>("NFTRoles");
+            var roles = await (await collec.FindAsync(r => r.guildId == guildId)).ToListAsync();
+            return roles;
+        }
+
         public static async Task CheckAllRolesReq() {
             var collec = DatabaseConnection.GetDb().GetCollection<NFTRoleHandler>("NFTRoles");
             var roles = await (await collec.FindAsync(r => true)).ToListAsync();
