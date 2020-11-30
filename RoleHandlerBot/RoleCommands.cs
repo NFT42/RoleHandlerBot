@@ -43,10 +43,11 @@ namespace RoleHandlerBot
                 $"`{Bot.CommandPrefix}addnftrole @nftaxie AXIE 0xf5b0a3efb8e8e4c201e2a935f110eaaf3ffecb8d hold 5 claimaxie`");
             embed.AddField("Update a role [Admin]", $"Use command `{Bot.CommandPrefix}updaterole @role requirement` to update a role rerquirement");
             embed.AddField("Remove a role [Admin]", $"Use command `{Bot.CommandPrefix}deleterole @role` or `{Bot.CommandPrefix}deletenftrole @role` to remove a role");
-            embed.AddField("Show all group roles", $"Use command `{Bot.CommandPrefix}grouproles` to get a list of all roles");
-            embed.AddField("Create an token group", $"`{Bot.CommandPrefix}creategroup tokenAddress tokenName tokenDecimal groupName` to create a new token group");
-            embed.AddField("Create a group role", $"Use command `{Bot.CommandPrefix}addgrouprole @role groupName tokenRequirement claimName` to create a group role");
-            embed.AddField("Remove a group role", $"Use command `{Bot.CommandPrefix}removegroudrole groupname claimName` to remove a group role");
+            embed.AddField("Show all group roles [admin]", $"Use command `{Bot.CommandPrefix}grouproles` to get a list of all roles");
+            embed.AddField("Create an token group [Admin]", $"`{Bot.CommandPrefix}creategroup tokenAddress tokenName tokenDecimal groupName` to create a new token group");
+            embed.AddField("Create a group role [Admin]", $"Use command `{Bot.CommandPrefix}addgrouprole @role groupName tokenRequirement claimName` to create a group role");
+            embed.AddField("Update a group role [Admin]", $"Use command `{Bot.CommandPrefix}updategrouprole groupName tokenRequirement claimName` to update a group role");
+            embed.AddField("Remove a group role [Admin]", $"Use command `{Bot.CommandPrefix}removegroudrole groupname claimName` to remove a group role");
             embed.AddField("Show all roles", $"Use command `{Bot.CommandPrefix}showroles` to get a list of all roles");
             embed.AddField("Attach an address", $"Use command `{Bot.CommandPrefix}verify` and paste result from web app");
             embed.AddField("Claim a role", $"Use command `{Bot.CommandPrefix}claim claimName` to claim a role if you meet requirements");
@@ -107,6 +108,23 @@ namespace RoleHandlerBot
             var group = await GroupHandler.GetGroupHandler(Context.Guild.Id, gName);
             if (BigNumber.IsValidValue(req, group.TokenDecimal)) {
                 await group.AddRole(role.Id, cName, req);
+                await Context.Message.AddReactionAsync(new Emoji("✅"));
+            }
+            else
+                await ReplyAsync("Wrong token value in respect to decimals");
+        }
+
+        [Command("UpdateGroupRole", RunMode = RunMode.Async)]
+        public async Task UpdateGroupRole(string gName, string req, string cName) {
+            if (!await IsAdmin())
+                return;
+            if (Context.Guild == null) {
+                await ReplyAsync("You must issue this command inside a server!");
+                return;
+            }
+            var group = await GroupHandler.GetGroupHandler(Context.Guild.Id, gName);
+            if (BigNumber.IsValidValue(req, group.TokenDecimal)) {
+                await group.UpdateRole(cName, req);
                 await Context.Message.AddReactionAsync(new Emoji("✅"));
             }
             else
@@ -245,7 +263,7 @@ namespace RoleHandlerBot
             var roles = await RoleHandler.GetAllRoles();
             roles = roles.Where(r => r.guildId == Context.Guild.Id).ToList();
             var embed = new EmbedBuilder().WithTitle("📜 Roles 📜").WithColor(Color.Blue);
-            embed.WithDescription("Delete a role handler using `{Bot.CommandPrefix}deleteRole @role`or `{Bot.CommandPrefix}deleteNFTRoles @role` [ADMIN ONLY]");
+            embed.WithDescription($"Delete a role handler using `{Bot.CommandPrefix}deleteRole @role`or `{Bot.CommandPrefix}deleteNFTRoles @role` [ADMIN ONLY]");
 
             int i = 1;
             foreach (var role in roles) {

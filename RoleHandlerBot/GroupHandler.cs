@@ -139,6 +139,14 @@ namespace RoleHandlerBot {
             await UpdateOne(g => g.RoleDict, RoleDict);
         }
 
+        public async Task UpdateRole(string roleName, string requirement) {
+            foreach (var role in RoleDict.Values) {
+                if (role.ClaimName == roleName.ToLower())
+                    role.Requirement = BigNumber.ParseValueToTokenDecimal(requirement, TokenDecimal);
+            }
+            await UpdateOne(g => g.RoleDict, RoleDict);
+        }
+
         public async Task RemoveRole(ulong roleId) {
             if (RoleDict.ContainsKey(roleId.ToString())) {
                 RoleDict.Remove(roleId.ToString());
