@@ -152,6 +152,7 @@ namespace RoleHandlerBot
                     Console.WriteLine("Start checking");
                     await CheckAllRolesReq();
                     await NFTRoleHandler.CheckAllRolesReq();
+                    await GroupHandler.CheckAllRolesReq();
                     Console.WriteLine("Done checking");
                     await Task.Delay(1000 * 3600 * 24);
                 }
