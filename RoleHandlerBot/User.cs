@@ -43,7 +43,7 @@ namespace RoleHandlerBot
         {
             var user = await GetUser(id);
             if (user == null)
-                return null;
+                return new List<string>();
             return user.addresses;
         }
 
