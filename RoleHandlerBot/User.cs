@@ -57,5 +57,20 @@ namespace RoleHandlerBot
             var collecNew = DatabaseConnection.GetDb().GetCollection<User>("Users");
             await collecNew.InsertManyAsync(newUsers);
         }
+
+        public static async Task ToLowerCapAndRemoveDups() {
+            var collec = DatabaseConnection.GetDb().GetCollection<User>("Users");
+            var users = await GetAllUsers();
+            foreach (var user in users) {
+                for (int i = 0; i < user.addresses.Count; i++)
+                    user.addresses[i] = user.addresses[i].ToLower();
+                if (user.addresses.Distinct().Count() < user.addresses.Count) {
+                    Console.WriteLine($"Dups found for {user.id}");
+                    user.addresses = user.addresses.Distinct().ToList();
+                }
+                var update = Builders<User>.Update.Set(a => a.addresses, user.addresses);
+                await collec.UpdateOneAsync(u => u.id == user.id, update);
+            }
+        }
     }
 }

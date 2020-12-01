@@ -368,44 +368,6 @@ namespace RoleHandlerBot
             await Context.Message.AddReactionAsync(new Emoji("✅"));
         }
 
-        [Command("testclaim", RunMode = RunMode.Async)]
-        public async Task TestClaimeRole(string claim, string address, ulong userId) {
-            var (pair, group) = await GroupHandler.GetGroupRoleFromClaimName(claim, Context.Guild.Id);
-            if (group != null) {
-                await TestClaimGroupRole(pair, group, address, userId);
-                return;
-            }
-            var nftRole = await NFTRoleHandler.GetRoleByClaimName(claim, Context.Guild.Id);
-            if (nftRole != null)
-                await ClaimNFTRole(nftRole);
-            var role = await RoleHandler.GetRoleByClaimName(claim);
-            if (role == null)
-                return;
-            if (Context.Guild == null || Context.Guild.Id != role.guildId) {
-                await ReplyAsync("Please use command in the correct server.");
-                return;
-            }
-            var addresses = new string[1] { address};
-            if (addresses.Length == 0) {
-                await ReplyAsync("User has not binded an address. Please Bind an address using command `{Bot.CommandPrefix}verify`");
-                return;
-            }
-            var give = false;
-            foreach (var add in addresses)
-                if (await Blockchain.ChainWatcher.GetBalanceOf(role.TokenAddress, add) >= BigInteger.Parse(role.GetBN())) {
-                    give = true;
-                    break;
-                }
-            if (give) {
-                var user = Context.Message.Author as SocketGuildUser;
-                //await user.AddRoleAsync(Context.Guild.GetRole(role.RoleId));
-                await Context.Message.AddReactionAsync(new Emoji("✅"));
-            }
-            else
-                await Context.Message.AddReactionAsync(new Emoji("❌"));
-        }
-
-
         [Command("claim", RunMode = RunMode.Async)]
         public async Task ClaimeRole(string claim)
         {
@@ -494,38 +456,6 @@ namespace RoleHandlerBot
             var role = Context.Guild.GetRole(roleId);
             await user.RemoveRoleAsync(role);
             await Context.Message.AddReactionAsync(new Emoji("✅"));
-        }
-
-        public async Task TestClaimGroupRole(KeyValuePair<string, GroupRole> pair, GroupHandler group, string address1, ulong userId) {
-            if (Context.Guild == null || Context.Guild.Id != group.guildId) {
-                await ReplyAsync("Please use command in the correct server.");
-                return;
-            }
-            var addresses = new string[1] { address1 };
-            if (addresses.Length == 0) {
-                await ReplyAsync("User has not binded an address. Please Bind an address using command `{Bot.CommandPrefix}verify`");
-                return;
-            }
-            await Context.Message.AddReactionAsync(Emote.Parse("<a:loading:726356725648719894>"));
-            // insert logic to approve role
-            var balance = BigInteger.Zero;
-            foreach (var address in addresses)
-                balance += await Blockchain.ChainWatcher.GetBalanceOf(group.TokenAddress, address);
-            var usedBalance = BigInteger.Zero;
-            var roleReq = BigInteger.Parse(pair.Value.Requirement);
-            var guildUser = await Context.Guild.GetUserAsync(userId) as IGuildUser;
-            var userRoles = guildUser.RoleIds;
-            foreach (var role in group.RoleDict) {
-                if (userRoles.Contains(ulong.Parse(role.Key)))
-                    usedBalance += BigInteger.Parse(role.Value.Requirement);
-            }
-            var eligible = balance >= usedBalance + roleReq;
-            await Context.Message.RemoveReactionAsync(Emote.Parse("<a:loading:726356725648719894>"), Context.Client.CurrentUser.Id);
-            if (eligible) {
-                await Context.Message.AddReactionAsync(new Emoji("✅"));
-            }
-            else
-                await Context.Message.AddReactionAsync(new Emoji("❌"));
         }
 
         public async Task ClaimGroupRole(KeyValuePair<string, GroupRole> pair, GroupHandler group) {
