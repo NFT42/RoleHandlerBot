@@ -13,11 +13,13 @@ namespace RoleHandlerBot.Blockchain
 {
     public class ChainWatcher
     {
-        public static string web3Url = "https://mainnet.infura.io/v3/b4e2781f02a94a5a96dcf8ce8cab9449";
+        public static string INFURA_WEB3_ENDPOINT = "https://mainnet.infura.io/v3/b4e2781f02a94a5a96dcf8ce8cab9449";
+        public static string GETH_WEB3_ENDPOINT = "http://localhost:8545";
+
 
         public static async Task<string> GetOwnerOf(string tokenAddress, BigInteger id) {
             Web3 web3;
-            web3 = new Web3("https://mainnet.infura.io/v3/b4e2781f02a94a5a96dcf8ce8cab9449");
+            web3 = new Web3(GETH_WEB3_ENDPOINT);
             var handler = web3.Eth.GetContractQueryHandler<OwnerOfFunction>();
             var param = new OwnerOfFunction() { Id = id };
             var balance = await handler.QueryAsync<string>(tokenAddress, param);
@@ -27,7 +29,7 @@ namespace RoleHandlerBot.Blockchain
         public static async Task<BigInteger> GetBalanceOf(string tokenAddress, string owner)
         {
             Web3 web3;
-            web3 = new Web3("https://mainnet.infura.io/v3/b4e2781f02a94a5a96dcf8ce8cab9449");
+            web3 = new Web3(GETH_WEB3_ENDPOINT);
             var handler = web3.Eth.GetContractQueryHandler<BalanceOfFunction>();
             var param = new BalanceOfFunction() { Owner = owner };
             var balance = await handler.QueryAsync<BigInteger>(tokenAddress, param);
@@ -37,7 +39,7 @@ namespace RoleHandlerBot.Blockchain
         public static async Task<BigInteger> GetTokenDecimal(string tokenAddress)
         {
             Web3 web3;
-            web3 = new Web3("https://mainnet.infura.io/v3/b4e2781f02a94a5a96dcf8ce8cab9449");
+            web3 = new Web3(GETH_WEB3_ENDPOINT);
             var handler = web3.Eth.GetContractQueryHandler<DecimalsFunction>();
             var dec = await handler.QueryAsync<BigInteger>(tokenAddress);
             return dec;

@@ -31,7 +31,7 @@ namespace RoleHandlerBot.Blockchain
             try {
                 var ensUtil = new EnsUtil();
                 var contract = "0x314159265dD8dbb310642f98f50C066173C1259b"; //ENS contract address
-                var web3 = new Web3("https://mainnet.infura.io/v3/146c5ff4a83a4a62b8eb4bbc93e07974");
+                var web3 = new Web3(ChainWatcher.GETH_WEB3_ENDPOINT);
                 var fullNameNode = ensUtil.GetNameHash(ensName);
                 var ensRegistryService = new ENSRegistryService(web3, contract);
                 var oldResolver = "0x226159d592E2b063810a10Ebf6dcbADA94Ed68b8";
