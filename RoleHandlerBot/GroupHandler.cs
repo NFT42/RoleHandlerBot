@@ -39,6 +39,7 @@ namespace RoleHandlerBot {
 
         public async Task CheckAllRoleReq() {
             try {
+                Console.WriteLine($"Checking {GroupName}");
                 var guild = Bot.DiscordClient.GetGuild(guildId) as IGuild;
                 var rolesId = RoleDict.Keys.Select(k => ulong.Parse(k)).ToList();
                 var roles = new List<IRole>();

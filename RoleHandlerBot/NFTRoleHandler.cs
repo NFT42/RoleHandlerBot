@@ -71,6 +71,45 @@ namespace RoleHandlerBot {
             CustomCall = custom;
         }
 
+        public async Task CheckAllRoleReqTest(ulong id) {
+            try {
+                var guild = Bot.DiscordClient.GetGuild(guildId) as IGuild;
+                var role = guild.GetRole(RoleId);
+                var roleUsers = (await guild.GetUsersAsync());
+                var list = roleUsers.Where(u => u.Id == id).ToList();
+                Console.WriteLine($"Checking requirements for {role.Name}");
+                foreach (var user in list) {
+                    if (user.RoleIds.Contains(role.Id) && !user.IsBot) {
+                        bool qualifies = true;
+                        var ownerAddresses = await User.GetUserAddresses(user.Id);
+                        foreach (var ownerAddress in ownerAddresses) {
+                            switch (RequirementType) {
+                                case NFTReqType.HoldX:
+                                    qualifies = await Blockchain.ChainWatcher.GetBalanceOf(NFTAddress, ownerAddress) >= HoldXValue;
+                                    break;
+                                case NFTReqType.InRange:
+                                    qualifies = (await Blockchain.OpenSea.CheckNFTInRange(ownerAddress, NFTAddress, MinRange, MaxRange, HoldXValue));
+                                    break;
+                                case NFTReqType.Custom:
+                                    qualifies = true;
+                                    break;
+                            }
+                            if (qualifies)
+                                break;
+                        }
+                        if (!qualifies) {
+                            Console.WriteLine("mmh");
+                            //await user.RemoveRoleAsync(role);
+                            //await user.SendMessageAsync($"Hello!\nYour role `{role.Name}` in the `{guild.Name}` was removed as your {TokenName} requirement did not meet expectations."
+                                //+ "To reclaim the role, please make sure to make the minimum requirement in your wallet!");
+                        }
+                    }
+                }
+            }
+            catch (Exception e) {
+                Console.WriteLine(e.Message);
+            }
+        }
 
         public async Task CheckAllRoleReq() {
             try {
@@ -85,8 +124,7 @@ namespace RoleHandlerBot {
                         foreach (var ownerAddress in ownerAddresses) {
                             switch (RequirementType) {
                                 case NFTReqType.HoldX:
-                                    if (await Blockchain.ChainWatcher.GetBalanceOf(NFTAddress, ownerAddress) < HoldXValue)
-                                        qualifies = false;
+                                    qualifies = await Blockchain.ChainWatcher.GetBalanceOf(NFTAddress, ownerAddress) >= HoldXValue;
                                     break;
                                 case NFTReqType.InRange:
                                     qualifies = (await Blockchain.OpenSea.CheckNFTInRange(ownerAddress, NFTAddress, MinRange, MaxRange, HoldXValue));
