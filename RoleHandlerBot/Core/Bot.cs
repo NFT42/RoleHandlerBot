@@ -38,8 +38,8 @@ namespace RoleHandlerBot
             _commands = new CommandService();
             DiscordClient.Log += Logger.Log;
             DiscordClient.MessageReceived += HandleCommandAsync;
-            if (Program.IsRelease)
-                DiscordClient.Ready += RoleHandler.RunChecks;
+            //if (Program.IsRelease)
+                //DiscordClient.Ready += RoleHandler.RunChecks;
         }
 
         ~Bot()
