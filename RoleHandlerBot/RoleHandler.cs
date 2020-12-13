@@ -61,12 +61,23 @@ namespace RoleHandlerBot
                         if (addresses == null)
                             continue;
                         var remove = true;
-                        foreach (var address in addresses)
-                            if (await Blockchain.ChainWatcher.GetBalanceOf(TokenAddress, address) >= BigInteger.Parse(GetBN())) {
-                                remove = false;
-                                break;
-                            }
-                        if (remove) {
+                        if (addresses != null) {
+                            foreach (var address in addresses)
+                                if (await Blockchain.ChainWatcher.GetBalanceOf(TokenAddress, address) >= BigInteger.Parse(GetBN())) {
+                                    remove = false;
+                                    break;
+                                }
+                        }
+                        if (addresses == null) {
+                            await user.RemoveRoleAsync(role);
+                            await user.SendMessageAsync($"Hello!\nYour role `{role.Name}` in the `{guild.Name}` was removed as we couldn't find your verified address, please re-verify!");
+                            var message = "**Follow this link to verify your ethereum address**";
+                            var embed = new EmbedBuilder().WithTitle("Follow this link to verify your address").WithDescription(message);
+                            embed.WithColor(Color.DarkMagenta);
+                            embed.WithUrl("https://discord.com/api/oauth2/authorize?client_id=778946094804762644&redirect_uri=https%3A%2F%2Fnft42-next.vercel.app%2F&response_type=code&scope=identify");
+                            await user.SendMessageAsync(embed: embed.Build());
+                        }
+                        else if (remove) {
                             await user.RemoveRoleAsync(role);
                             await user.SendMessageAsync($"Hello!\nYour role `{role.Name}` in the `{guild.Name}` was removed as your token balance went below the requirement of {BigNumber.FormatUint(Requirement, tokenDecimal)} {TokenName.ToUpper()}."
                                 + "To reclaim the role, please make sure to make the minimum requirement in your wallet!");

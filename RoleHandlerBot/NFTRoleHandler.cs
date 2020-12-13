@@ -82,26 +82,36 @@ namespace RoleHandlerBot {
                     if (user.RoleIds.Contains(role.Id) && !user.IsBot) {
                         bool qualifies = true;
                         var ownerAddresses = await User.GetUserAddresses(user.Id);
-                        foreach (var ownerAddress in ownerAddresses) {
-                            switch (RequirementType) {
-                                case NFTReqType.HoldX:
-                                    qualifies = await Blockchain.ChainWatcher.GetBalanceOf(NFTAddress, ownerAddress) >= HoldXValue;
-                                    break;
-                                case NFTReqType.InRange:
-                                    qualifies = (await Blockchain.OpenSea.CheckNFTInRange(ownerAddress, NFTAddress, MinRange, MaxRange, HoldXValue));
-                                    break;
-                                case NFTReqType.Custom:
-                                    qualifies = true;
+                        if (ownerAddresses != null) {
+                            foreach (var ownerAddress in ownerAddresses) {
+                                switch (RequirementType) {
+                                    case NFTReqType.HoldX:
+                                        qualifies = await Blockchain.ChainWatcher.GetBalanceOf(NFTAddress, ownerAddress) >= HoldXValue;
+                                        break;
+                                    case NFTReqType.InRange:
+                                        qualifies = (await Blockchain.OpenSea.CheckNFTInRange(ownerAddress, NFTAddress, MinRange, MaxRange, HoldXValue));
+                                        break;
+                                    case NFTReqType.Custom:
+                                        qualifies = true;
+                                        break;
+                                }
+                                if (qualifies)
                                     break;
                             }
-                            if (qualifies)
-                                break;
                         }
-                        if (!qualifies) {
-                            Console.WriteLine("mmh");
-                            //await user.RemoveRoleAsync(role);
-                            //await user.SendMessageAsync($"Hello!\nYour role `{role.Name}` in the `{guild.Name}` was removed as your {TokenName} requirement did not meet expectations."
-                                //+ "To reclaim the role, please make sure to make the minimum requirement in your wallet!");
+                        if (ownerAddresses == null) {
+                            await user.RemoveRoleAsync(role);
+                            await user.SendMessageAsync($"Hello!\nYour role `{role.Name}` in the `{guild.Name}` was removed as we couldn't find your verified address, please re-verify!");
+                            var embed = new EmbedBuilder().WithTitle("Follow this link to verify your address");
+                            embed.WithColor(Color.DarkMagenta);
+                            embed.WithUrl("https://discord.com/api/oauth2/authorize?client_id=778946094804762644&redirect_uri=https%3A%2F%2Fnft42-next.vercel.app%2F&response_type=code&scope=identify");
+                            await user.SendMessageAsync(embed: embed.Build());
+                        }
+                        else if (!qualifies) {
+                            //Console.WriteLine("mmh");
+                            await user.RemoveRoleAsync(role);
+                            await user.SendMessageAsync($"Hello!\nYour role `{role.Name}` in the `{guild.Name}` was removed as your {TokenName} requirement did not meet expectations."
+                                + "To reclaim the role, please make sure to make the minimum requirement in your wallet!");
                         }
                     }
                 }
