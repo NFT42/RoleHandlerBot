@@ -56,6 +56,11 @@ namespace RoleHandlerBot
 
         }
 
+        [Command("user", RunMode = RunMode.Async)]
+        public async Task UserInfo(ulong id) {
+            var user = await Bot.DiscordClient.Rest.GetUserAsync(id);
+        }
+
         [Command("CreateGroup", RunMode = RunMode.Async)]
         public async Task AddGroup(string tokenAddress, string tname, int dec, string gName) {
             if (!await IsAdmin())
@@ -446,6 +451,43 @@ namespace RoleHandlerBot
             }
             else
                 await Context.Message.AddReactionAsync(new Emoji("❌"));
+        }
+
+        [Command("remove", RunMode = RunMode.Async)]
+        public async Task RemoveRoleUser(string claim) {
+            if (Context.Guild == null)
+                return;
+            var user = Context.Message.Author as IGuildUser;
+            var roleIds = user.RoleIds;
+            var (pair, group) = await GroupHandler.GetGroupRoleFromClaimName(claim, Context.Guild.Id);
+            if (group != null) {
+                var role = Context.Guild.GetRole(ulong.Parse(pair.Key));
+                if (roleIds.Contains(ulong.Parse(pair.Key))) {
+                    await user.RemoveRoleAsync(role);
+                    await Context.Message.AddReactionAsync(new Emoji("✅"));
+                }
+                return;
+            }
+            var nftRole = await NFTRoleHandler.GetRoleByClaimName(claim, Context.Guild.Id);
+            if (nftRole != null) {
+                var role = Context.Guild.GetRole(nftRole.RoleId);
+                if (roleIds.Contains(nftRole.RoleId)) {
+                    await user.RemoveRoleAsync(role);
+                    await Context.Message.AddReactionAsync(new Emoji("✅"));
+                }
+                return;
+            }
+            var tokenRole = await RoleHandler.GetRoleByClaimName(claim);
+            if (tokenRole != null) {
+                if (Context.Guild.Id == tokenRole.guildId) {
+                    var role = Context.Guild.GetRole(tokenRole.RoleId);
+                    if (roleIds.Contains(tokenRole.RoleId)) {
+                        await user.RemoveRoleAsync(role);
+                        await Context.Message.AddReactionAsync(new Emoji("✅"));
+                    }
+                    return;
+                }
+            }
         }
 
         [Command("removerole", RunMode = RunMode.Async)]
