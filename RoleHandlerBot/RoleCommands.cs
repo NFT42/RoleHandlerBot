@@ -373,6 +373,27 @@ namespace RoleHandlerBot
             await Context.Message.AddReactionAsync(new Emoji("✅"));
         }
 
+        [Command("testfor", RunMode = RunMode.Async)]
+        public async Task CheckGroupRoles(ulong user) {
+            if (!await IsAdmin())
+                return;
+            //var (pair, group) = await GroupHandler.GetGroupRoleFromClaimName(claim, Context.Guild.Id);
+            var group = await GroupHandler.GetGroupHandler(Context.Guild.Id, "whalegroup");
+            await group.CheckOne(user);
+
+        }
+
+        [Command("AddroleFor")]
+        public async Task AddRoleFor(IUser user, string claim) {
+            if (!await IsAdmin())
+                return;
+            var (pair, group) = await GroupHandler.GetGroupRoleFromClaimName(claim, Context.Guild.Id);
+            if (group != null) {
+                await ClaimGroupRoleFor(pair, group, user);
+                return;
+            }
+        }
+
         [Command("claim", RunMode = RunMode.Async)]
         public async Task ClaimeRole(string claim)
         {
@@ -530,6 +551,44 @@ namespace RoleHandlerBot
                 var aRole = Context.Guild.GetRole(ulong.Parse(pair.Key));
                 try {
                     await user.AddRoleAsync(aRole);
+                }
+                catch (Exception e) { Console.WriteLine(e.Message); }
+                await Context.Message.AddReactionAsync(new Emoji("✅"));
+            }
+            else
+                await Context.Message.AddReactionAsync(new Emoji("❌"));
+        }
+
+        public async Task ClaimGroupRoleFor(KeyValuePair<string, GroupRole> pair, GroupHandler group, IUser user) {
+            if (Context.Guild == null || Context.Guild.Id != group.guildId) {
+                await ReplyAsync("Please use command in the correct server.");
+                return;
+            }
+            var addresses = await User.GetUserAddresses(user.Id);
+            if (addresses.Count == 0) {
+                await ReplyAsync("User has not binded an address. Please Bind an address using command `{Bot.CommandPrefix}verify`");
+                return;
+            }
+            await Context.Message.AddReactionAsync(Emote.Parse("<a:loading:726356725648719894>"));
+            // insert logic to approve role
+            var balance = BigInteger.Zero;
+            foreach (var address in addresses)
+                balance += await Blockchain.ChainWatcher.GetBalanceOf(group.TokenAddress, address);
+            var usedBalance = BigInteger.Zero;
+            var roleReq = BigInteger.Parse(pair.Value.Requirement);
+            var guildUser = user as IGuildUser;
+            var userRoles = guildUser.RoleIds;
+            foreach (var role in group.RoleDict) {
+                if (userRoles.Contains(ulong.Parse(role.Key)))
+                    usedBalance += BigInteger.Parse(role.Value.Requirement);
+            }
+            var eligible = balance >= usedBalance + roleReq;
+            await Context.Message.RemoveReactionAsync(Emote.Parse("<a:loading:726356725648719894>"), Context.Client.CurrentUser.Id);
+            if (eligible) {
+                var roleUser = user as SocketGuildUser;
+                var aRole = Context.Guild.GetRole(ulong.Parse(pair.Key));
+                try {
+                    await roleUser.AddRoleAsync(aRole);
                 }
                 catch (Exception e) { Console.WriteLine(e.Message); }
                 await Context.Message.AddReactionAsync(new Emoji("✅"));

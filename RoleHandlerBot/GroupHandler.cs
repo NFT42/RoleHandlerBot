@@ -92,7 +92,61 @@ namespace RoleHandlerBot {
             }
         }
 
-        public void Update(ulong gId, string tAd, int dec, string cName, string tName) {
+        public async Task CheckOne(ulong userId) {
+            try { 
+                Console.WriteLine($"Checking {GroupName}");
+                var guild = Bot.DiscordClient.GetGuild(guildId) as IGuild;
+                var rolesId = RoleDict.Keys.Select(k => ulong.Parse(k)).ToList();
+                var roles = new List<IRole>();
+                foreach (var id in rolesId)
+                    roles.Add(guild.GetRole(id));
+                var user = await guild.GetUserAsync(userId);
+                    if (!user.IsBot) {
+                        var addresses = await User.GetUserAddresses(user.Id);
+                        var remove = true;
+                        List<IRole> heldRoles = new List<IRole>();
+                        if (addresses != null) {
+                            var balance = BigInteger.Zero;
+                            var usedBalance = BigInteger.Zero;
+                            foreach (var address in addresses)
+                                balance += await Blockchain.ChainWatcher.GetBalanceOf(TokenAddress, address);
+                            foreach (var id in rolesId)
+                                if (user.RoleIds.Contains(id)) {
+                                    usedBalance += BigInteger.Parse(RoleDict[id.ToString()].Requirement);
+                                    heldRoles.Add(roles.First(r => r.Id == id));
+                                }
+                            remove = usedBalance > balance;
+                        }
+                        if (addresses == null) {
+                            foreach (var id in rolesId)
+                                if (user.RoleIds.Contains(id)) {
+                                    heldRoles.Add(roles.First(r => r.Id == id));
+                                }
+                            await user.RemoveRolesAsync(heldRoles);
+                            await user.SendMessageAsync($"Hello!\nYour roles related to the `{GroupName}` group in the `{guild.Name}` guild were removed as we couldn't find your verified address, please re-verify!");
+                            var message = "**Follow this link to verify your ethereum address**";
+                            var embed = new EmbedBuilder().WithTitle("Follow this link to verify your address").WithDescription(message);
+                            embed.WithColor(Color.DarkMagenta);
+                            embed.WithUrl("https://discord.com/api/oauth2/authorize?client_id=778946094804762644&redirect_uri=https%3A%2F%2Fnft42-next.vercel.app%2F&response_type=code&scope=identify");
+                            await user.SendMessageAsync(embed: embed.Build());
+
+                        }
+                        else if (remove) {
+                            await user.RemoveRolesAsync(heldRoles);
+                            await user.SendMessageAsync($"Hello!\nYour roles related to the `{GroupName}` group in the `{guild.Name}` guild were removed as your ${TokenName.ToUpper()} balance went below the requirement to hold your current roles ."
+                                + "To reclaim the roles, please make sure to make the minimum requirement in your wallet!\n"
+                                + "Alternatively, you may select fewer roles to make sure you pass requirements");
+                        }
+                    }
+                Console.WriteLine("Done\n");
+            }
+            catch (Exception e) {
+                Console.WriteLine(e.Message);
+            }
+
+}
+
+public void Update(ulong gId, string tAd, int dec, string cName, string tName) {
             guildId = gId;
             TokenAddress = tAd;
             TokenDecimal = dec;
