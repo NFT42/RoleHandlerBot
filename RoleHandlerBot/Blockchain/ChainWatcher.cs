@@ -50,6 +50,15 @@ namespace RoleHandlerBot.Blockchain
             var blockNumber = lastBlock.Value - 4;
             return new BlockParameter(new HexBigInteger(blockNumber));
         }
+
+        public static async Task<bool> CheckIfKoArtist(string add) {
+            Web3 web3;
+            web3 = new Web3(GETH_WEB3_ENDPOINT);
+            var handler = web3.Eth.GetContractQueryHandler<IsEnabledForAccount>();
+            var param = new IsEnabledForAccount() { Artist = add };
+            var res = await handler.QueryAsync<bool>("0xec133df5d806a9069aee513b8be01eeee2f03ff0", param);
+            return res;
+        }
     }
 
     [FunctionOutput]
@@ -81,6 +90,11 @@ namespace RoleHandlerBot.Blockchain
     {
     }
 
+    [Function("isEnabledForAccount", "bool")]
+    public class IsEnabledForAccount : FunctionMessage {
+        [Parameter("address")]
+        public string Artist { get; set; }
+    }
 
     public class Checkpoint
     {

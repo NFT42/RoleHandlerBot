@@ -257,11 +257,6 @@ namespace RoleHandlerBot
             await Context.Message.AddReactionAsync(new Emoji("✅"));
         }
 
-        [Command("ens", RunMode = RunMode.Async)]
-        public async Task TestRun(string ens) {
-            await ReplyAsync(await Blockchain.Utils.GetENSAddress(ens));
-        }
-
         [Command("showRoles", RunMode = RunMode.Async)]
         public async Task ShowRoles()
         {
@@ -329,7 +324,7 @@ namespace RoleHandlerBot
                 await ReplyAsync("User has not binded an address. Please Bind an address using command `{Bot.CommandPrefix}verify`");
                 return;
             }
-            await Context.Message.RemoveReactionAsync(Emote.Parse("<a:loading:726356725648719894>"), Context.Client.CurrentUser.Id);
+            await Context.Message.AddReactionAsync(Emote.Parse("<a:loading:726356725648719894>"));
             var tokenRoles = await RoleHandler.GetAllRolesByGuild(Context.Guild.Id);
             foreach (var role in tokenRoles) {
                 var give = false;
@@ -369,6 +364,15 @@ namespace RoleHandlerBot
                     catch (Exception e) { Console.WriteLine(e.Message); }
                 }
             }
+            //var groupRoles = await GroupHandler.GetAllGroupHandlerFromGuild(Context.Guild.Id);
+
+            //foreach (var role in groupRoles) {
+            //    var balance = BigInteger.Zero;
+            //    var usedBalance = BigInteger.Zero;
+            //    var role
+            //    foreach (var add in addresses)
+            //        balance += await Blockchain.ChainWatcher.GetBalanceOf(role.TokenAddress, add);
+            //}
             await Context.Message.RemoveReactionAsync(Emote.Parse("<a:loading:726356725648719894>"), Context.Client.CurrentUser.Id);
             await Context.Message.AddReactionAsync(new Emoji("✅"));
         }
@@ -383,7 +387,7 @@ namespace RoleHandlerBot
 
         }
 
-        [Command("AddroleFor")]
+        [Command("AddroleFor", RunMode = RunMode.Async)]
         public async Task AddRoleFor(IUser user, string claim) {
             if (!await IsAdmin())
                 return;
@@ -415,7 +419,7 @@ namespace RoleHandlerBot
             }
             var addresses = await User.GetUserAddresses(Context.Message.Author.Id);
             if (addresses.Count == 0) {
-                await ReplyAsync("User has not binded an address. Please Bind an address using command `{Bot.CommandPrefix}verify`");
+                await ReplyAsync($"User has not binded an address. Please Bind an address using command `{Bot.CommandPrefix}verify`");
                 return;
             }
             var give = false;
@@ -441,7 +445,7 @@ namespace RoleHandlerBot
             }
             var addresses = await User.GetUserAddresses(Context.Message.Author.Id);
             if (addresses.Count == 0) {
-                await ReplyAsync("User has not binded an address. Please Bind an address using command `{Bot.CommandPrefix}verify`");
+                await ReplyAsync($"User has not binded an address. Please Bind an address using command `{Bot.CommandPrefix}verify`");
                 return;
             }
             await Context.Message.AddReactionAsync(Emote.Parse("<a:loading:726356725648719894>"));
@@ -512,7 +516,7 @@ namespace RoleHandlerBot
         }
 
         [Command("removerole", RunMode = RunMode.Async)]
-        public async Task RemoveRole(ulong userId, ulong roleId) {
+        public async Task AdminRemoveRole(ulong userId, ulong roleId) {
             if (!await IsAdmin())
                 return;
             var user = Bot.GetUser(userId) as IGuildUser;
@@ -532,7 +536,6 @@ namespace RoleHandlerBot
                 return;
             }
             await Context.Message.AddReactionAsync(Emote.Parse("<a:loading:726356725648719894>"));
-            // insert logic to approve role
             var balance = BigInteger.Zero;
             foreach (var address in addresses)
                 balance += await Blockchain.ChainWatcher.GetBalanceOf(group.TokenAddress, address);
@@ -570,7 +573,6 @@ namespace RoleHandlerBot
                 return;
             }
             await Context.Message.AddReactionAsync(Emote.Parse("<a:loading:726356725648719894>"));
-            // insert logic to approve role
             var balance = BigInteger.Zero;
             foreach (var address in addresses)
                 balance += await Blockchain.ChainWatcher.GetBalanceOf(group.TokenAddress, address);
