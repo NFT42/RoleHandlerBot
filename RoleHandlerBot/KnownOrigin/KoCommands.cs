@@ -52,8 +52,6 @@ namespace RoleHandlerBot.KnownOrigin {
 
         [Command("claim", RunMode = RunMode.Async)]
         public async Task Claim() {
-            if (!await IsAdmin())
-                return;
             if (!IfInKoServer())
                 return;
             var addresses = await User.GetUserAddresses(Context.Message.Author.Id);
