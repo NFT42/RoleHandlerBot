@@ -143,12 +143,37 @@ namespace RoleHandlerBot.KnownOrigin {
                 return;
             }
             var artistRole = Context.Guild.GetRole(727165006524842042);
+            var newArtistRole = Context.Guild.GetRole(807968579932389376);
             foreach (var add in addresses) {
                 if (await Blockchain.ChainWatcher.CheckIfKoArtist(add)) {
-                    await (Context.Message.Author as SocketGuildUser).AddRoleAsync(artistRole);
+                    if (await CheckIfNewArtist(add))
+                        await (Context.Message.Author as SocketGuildUser).AddRoleAsync(newArtistRole);
+                    else
+                        await (Context.Message.Author as SocketGuildUser).AddRoleAsync(artistRole);
                     return;
                 }
             }
+        }
+
+        public static async Task<bool> CheckIfNewArtist(string add) {
+            var data = "";
+            using (System.Net.WebClient wc = new System.Net.WebClient()) {
+                try {
+                    data = await wc.DownloadStringTaskAsync("https://us-central1-known-origin-io.cloudfunctions.net/main/api/network/1/accounts/" + add + "/profile/simple");
+                }
+                catch (Exception e) {
+                    Console.WriteLine(e.Message);
+                    return false;
+                }
+            }
+            var json = JObject.Parse(data);
+            if (json.Count == 1)
+                return true;
+            var enabledTS = (int)(((long)json["enabledTimestamp"]) / 1000);
+            var now = Convert.ToInt32(((DateTimeOffset)(DateTime.UtcNow)).ToUnixTimeSeconds());
+            var delta = now - enabledTS;
+            var t = 90 * 24 * 3600;
+            return delta < t;
         }
 
         public async Task ClaimKoWhaleRole() {
