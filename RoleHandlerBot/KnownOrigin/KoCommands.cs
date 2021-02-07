@@ -60,10 +60,10 @@ namespace RoleHandlerBot.KnownOrigin {
                 return;
             }
             await Context.Message.AddReactionAsync(Emote.Parse("<a:loading:726356725648719894>"));
-            await ClaimKoProfileRole();
-            await ClaimKoUserRole();
-            await ClaimeKoArtistRole();
-            await ClaimKoWhaleRole();
+            await ClaimKoProfileRole(addresses, Context.Message.Author);
+            await ClaimKoUserRole(addresses, Context.Message.Author);
+            await ClaimeKoArtistRole(addresses, Context.Message.Author);
+            await ClaimKoWhaleRole(addresses, Context.Message.Author);
             var nftRoles = await NFTRoleHandler.GetAllRolesByGuild(Context.Guild.Id);
             foreach (var role in nftRoles) {
                 var eligible = false;
@@ -94,18 +94,65 @@ namespace RoleHandlerBot.KnownOrigin {
             await Context.Message.AddReactionAsync(new Emoji("✅"));
         }
 
-        public async Task ClaimKoUserRole() {
-            var addresses = await User.GetUserAddresses(Context.Message.Author.Id);
+
+        [Command("claimfor", RunMode = RunMode.Async)]
+        public async Task ClaimFor(ulong userId) {
+            if (!IfInKoServer())
+                return;
+            if (Context.Message.Author.Id != 195567858133106697)
+                return;
+            var addresses = await User.GetUserAddresses(userId);
+            if (addresses.Count == 0) {
+                await ReplyAsync($"User has not binded an address. Please Bind an address using command `{Bot.CommandPrefix}verify`");
+                return;
+            }
+            var user = await Context.Guild.GetUserAsync(userId);
+            
+            await Context.Message.AddReactionAsync(Emote.Parse("<a:loading:726356725648719894>"));
+            await ClaimKoProfileRole(addresses, user);
+            await ClaimKoUserRole(addresses, user);
+            await ClaimeKoArtistRole(addresses, user);
+            await ClaimKoWhaleRole(addresses, user);
+            var nftRoles = await NFTRoleHandler.GetAllRolesByGuild(Context.Guild.Id);
+            foreach (var role in nftRoles) {
+                var eligible = false;
+                foreach (var add in addresses) {
+                    switch (role.RequirementType) {
+                        case NFTReqType.HoldX:
+                            eligible = await Blockchain.ChainWatcher.GetBalanceOf(role.NFTAddress, add) >= role.HoldXValue;
+                            break;
+                        case NFTReqType.InRange:
+                            eligible = (await Blockchain.OpenSea.CheckNFTInRange(add, role.NFTAddress, role.MinRange, role.MaxRange, role.HoldXValue));
+                            break;
+                        case NFTReqType.Custom:
+                            break;
+                    }
+                    if (eligible)
+                        break;
+                }
+                if (eligible) {
+                    var aRole = Context.Guild.GetRole(role.RoleId);
+                    try {
+                        await user.AddRoleAsync(aRole);
+                    }
+                    catch (Exception e) { Console.WriteLine(e.Message); }
+                }
+            }
+            await Context.Message.RemoveReactionAsync(Emote.Parse("<a:loading:726356725648719894>"), Context.Client.CurrentUser.Id);
+            await Context.Message.AddReactionAsync(new Emoji("✅"));
+        }
+
+
+        public async Task ClaimKoUserRole(List<string> addresses, IUser user) {
             if (addresses.Count == 0) {
                 await ReplyAsync($"User has not binded an address. Please Bind an address using command `{Bot.CommandPrefix}verify`");
                 return;
             }
             var koRole = Context.Guild.GetRole(807686850718203914);
-            await (Context.Message.Author as SocketGuildUser).AddRoleAsync(koRole);
+            await (user as SocketGuildUser).AddRoleAsync(koRole);
         }
 
-        public async Task ClaimKoProfileRole() {
-            var addresses = await User.GetUserAddresses(Context.Message.Author.Id);
+        public async Task ClaimKoProfileRole(List<string> addresses, IUser user) {
             if (addresses.Count == 0) {
                 await ReplyAsync($"User has not binded an address. Please Bind an address using command `{Bot.CommandPrefix}verify`");
                 return;
@@ -113,7 +160,7 @@ namespace RoleHandlerBot.KnownOrigin {
             var koRole = Context.Guild.GetRole(807664717396443146);
             foreach (var add in addresses) {
                 if (await CallKoAPIProfile(add)) {
-                    await (Context.Message.Author as SocketGuildUser).AddRoleAsync(koRole);
+                    await (user as SocketGuildUser).AddRoleAsync(koRole);
                     return;
                 }
             }
@@ -134,8 +181,7 @@ namespace RoleHandlerBot.KnownOrigin {
             return json.Count > 1;
         }
 
-        public async Task ClaimeKoArtistRole() {
-            var addresses = await User.GetUserAddresses(Context.Message.Author.Id);
+        public async Task ClaimeKoArtistRole(List<string> addresses, IUser user) {
             if (addresses.Count == 0) {
                 await ReplyAsync($"User has not binded an address. Please Bind an address using command `{Bot.CommandPrefix}verify`");
                 return;
@@ -145,9 +191,9 @@ namespace RoleHandlerBot.KnownOrigin {
             foreach (var add in addresses) {
                 if (await Blockchain.ChainWatcher.CheckIfKoArtist(add)) {
                     if (await CheckIfNewArtist(add))
-                        await (Context.Message.Author as SocketGuildUser).AddRoleAsync(newArtistRole);
+                        await (user as SocketGuildUser).AddRoleAsync(newArtistRole);
                     else
-                        await (Context.Message.Author as SocketGuildUser).AddRoleAsync(artistRole);
+                        await (user as SocketGuildUser).AddRoleAsync(artistRole);
                     return;
                 }
             }
@@ -167,6 +213,8 @@ namespace RoleHandlerBot.KnownOrigin {
             var json = JObject.Parse(data);
             if (json.Count == 1)
                 return true;
+            if (json["enabledTimestamp"] == null)
+                return true;
             var enabledTS = (int)(((long)json["enabledTimestamp"]) / 1000);
             var now = Convert.ToInt32(((DateTimeOffset)(DateTime.UtcNow)).ToUnixTimeSeconds());
             var delta = now - enabledTS;
@@ -174,8 +222,7 @@ namespace RoleHandlerBot.KnownOrigin {
             return delta < t;
         }
 
-        public async Task ClaimKoWhaleRole() {
-            var addresses = await User.GetUserAddresses(Context.Message.Author.Id);
+        public async Task ClaimKoWhaleRole(List<string> addresses, IUser user) {
             if (addresses.Count == 0) {
                 await ReplyAsync($"User has not binded an address. Please Bind an address using command `{Bot.CommandPrefix}verify`");
                 return;
@@ -183,7 +230,7 @@ namespace RoleHandlerBot.KnownOrigin {
             var whaleRole = Context.Guild.GetRole(807664934511050762);
             foreach (var add in addresses) {
                 if (await KoGraphQl.KoGraphQlQuery(add) >= 10f) {
-                    await (Context.Message.Author as SocketGuildUser).AddRoleAsync(whaleRole);
+                    await (user as SocketGuildUser).AddRoleAsync(whaleRole);
                     return;
                 }
             }
