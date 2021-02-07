@@ -104,7 +104,6 @@ namespace RoleHandlerBot.KnownOrigin {
             }
             var koRole = Context.Guild.GetRole(807686850718203914);
             await (Context.Message.Author as SocketGuildUser).AddRoleAsync(koRole);
-            await Context.Message.AddReactionAsync(new Emoji("✅"));
         }
 
         public async Task ClaimKoProfileRole() {
