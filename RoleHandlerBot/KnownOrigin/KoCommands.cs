@@ -212,9 +212,9 @@ namespace RoleHandlerBot.KnownOrigin {
             }
             var json = JObject.Parse(data);
             if (json.Count == 1)
-                return true;
+                return false;
             if (json["enabledTimestamp"] == null)
-                return true;
+                return false;
             var enabledTS = (int)(((long)json["enabledTimestamp"]) / 1000);
             var now = Convert.ToInt32(((DateTimeOffset)(DateTime.UtcNow)).ToUnixTimeSeconds());
             var delta = now - enabledTS;
