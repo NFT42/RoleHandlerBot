@@ -143,6 +143,30 @@ namespace RoleHandlerBot.KnownOrigin {
         }
 
 
+        [Command("debugclaim", RunMode = RunMode.Async)]
+        public async Task DebugClaimFor(ulong userId) {
+            if (!IfInKoServer())
+                return;
+            if (Context.Message.Author.Id != 195567858133106697)
+                return;
+            var addresses = await User.GetUserAddresses(userId);
+            if (addresses.Count == 0) {
+                await ReplyAsync($"User has not binded an address. Please Bind an address using command `{Bot.CommandPrefix}verify`");
+                return;
+            }
+            var user = await Context.Guild.GetUserAsync(userId);
+
+            await Context.Message.AddReactionAsync(Emote.Parse("<a:loading:726356725648719894>"));
+            await ClaimKoProfileRole(addresses, user);
+            await ClaimKoUserRole(addresses, user);
+            await DebugClaimeKoArtistRole(addresses, user);
+            await ClaimKoWhaleRole(addresses, user);
+            await Context.Message.RemoveReactionAsync(Emote.Parse("<a:loading:726356725648719894>"), Context.Client.CurrentUser.Id);
+            await Context.Message.AddReactionAsync(new Emoji("✅"));
+        }
+
+
+
         public async Task ClaimKoUserRole(List<string> addresses, IUser user) {
             if (addresses.Count == 0) {
                 await ReplyAsync($"User has not binded an address. Please Bind an address using command `{Bot.CommandPrefix}verify`");
@@ -196,6 +220,26 @@ namespace RoleHandlerBot.KnownOrigin {
                         await (user as SocketGuildUser).AddRoleAsync(artistRole);
                     return;
                 }
+            }
+        }
+
+        public async Task DebugClaimeKoArtistRole(List<string> addresses, IUser user) {
+            if (addresses.Count == 0) {
+                await ReplyAsync($"User has not binded an address. Please Bind an address using command `{Bot.CommandPrefix}verify`");
+                return;
+            }
+            var artistRole = Context.Guild.GetRole(727165006524842042);
+            var newArtistRole = Context.Guild.GetRole(807968579932389376);
+            foreach (var add in addresses) {
+                if (await Blockchain.ChainWatcher.CheckIfKoArtist(add)) {
+                    if (await CheckIfNewArtist(add))
+                        await ReplyAsync("new role should be assignedd");
+                    else
+                        await ReplyAsync("old role should be assignedd");
+                    return;
+                }
+                else
+                    await ReplyAsync("Failed to find artist");
             }
         }
 

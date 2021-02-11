@@ -5,16 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using MongoDB.Driver;
 namespace RoleHandlerBot
-{
-    public class OldUser {
-        public ulong id;
-        public string address;
-        public OldUser(ulong _id, string _address) {
-            id = _id;
-            address = _address;
-        }
-    }
-    
+{   
     public class User
     {
         public ulong id;
@@ -45,17 +36,6 @@ namespace RoleHandlerBot
             if (user == null)
                 return new List<string>();
             return user.addresses;
-        }
-
-        public static async Task MigrateAllUsers() {
-            var collec = DatabaseConnection.GetDb().GetCollection<OldUser>("Users");
-            var users = (await collec.FindAsync(u => true)).ToList();
-            await collec.DeleteManyAsync(u => true);
-            var newUsers = new List<User>();
-            foreach (var user in users)
-                newUsers.Add(new User(user.id, new List<string>() { user.address}));
-            var collecNew = DatabaseConnection.GetDb().GetCollection<User>("Users");
-            await collecNew.InsertManyAsync(newUsers);
         }
 
         public static async Task ToLowerCapAndRemoveDups() {

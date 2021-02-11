@@ -15,7 +15,13 @@ namespace RoleHandlerBot
             Blockchain.OpenSea.api = args[4];
             if (args[1].ToLower() == "prod")
                 IsRelease = true;
-            RunBot(token: args[2], prefix: args[3]);
+            else {
+                Blockchain.ChainWatcher.GETH_WEB3_ENDPOINT = Blockchain.ChainWatcher.INFURA_WEB3_ENDPOINT;
+            }
+            //User.MigrateAllUsers().GetAwaiter().GetResult();
+            //KnownOrigin.KoGraphQl.KoGraphQlQuery("0xf52393e120f918ffba50410b90a29b1f8250c879").GetAwaiter().GetResult();
+            POB.GetColors();
+            //RunBot(token: args[2], prefix: args[3]);
         }
         static void RunBot(string token, string prefix)
         {
