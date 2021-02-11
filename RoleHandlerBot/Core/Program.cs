@@ -20,8 +20,7 @@ namespace RoleHandlerBot
             }
             //User.MigrateAllUsers().GetAwaiter().GetResult();
             //KnownOrigin.KoGraphQl.KoGraphQlQuery("0xf52393e120f918ffba50410b90a29b1f8250c879").GetAwaiter().GetResult();
-            POB.GetColors();
-            //RunBot(token: args[2], prefix: args[3]);
+            RunBot(token: args[2], prefix: args[3]);
         }
         static void RunBot(string token, string prefix)
         {
