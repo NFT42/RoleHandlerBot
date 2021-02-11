@@ -216,8 +216,7 @@ namespace RoleHandlerBot.KnownOrigin {
                 if (await Blockchain.ChainWatcher.CheckIfKoArtist(add)) {
                     if (await CheckIfNewArtist(add))
                         await (user as SocketGuildUser).AddRoleAsync(newArtistRole);
-                    else
-                        await (user as SocketGuildUser).AddRoleAsync(artistRole);
+                    await (user as SocketGuildUser).AddRoleAsync(artistRole);
                     return;
                 }
             }
