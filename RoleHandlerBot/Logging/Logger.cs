@@ -5,7 +5,7 @@ namespace RoleHandlerBot
 {
     public static class Logger
     {
-        private static readonly ThreadSafeFileBuffer<string> LogWriter = new ThreadSafeFileBuffer<string>("Logger/log.txt"); // server
+        private static readonly ThreadSafeFileBuffer<string> LogWriter = new ThreadSafeFileBuffer<string>("log.txt"); // server
         public static void Log(string message)
         {
             try
