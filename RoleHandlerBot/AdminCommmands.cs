@@ -48,6 +48,20 @@ namespace RoleHandlerBot {
             }
         }
 
+        [Command("balanceof", RunMode = RunMode.Async)]
+        public async Task bOf(ulong id, string contract) {
+            try {
+                // var user = await Context.Guild.GetUserAsync(id);
+                var addresses = await User.GetUserAddresses(id);
+                foreach (var add in addresses)
+                    await ReplyAsync($"User has {await Blockchain.ChainWatcher.GetBalanceOf(contract, add)}");
+            }
+            catch (Exception e) {
+                Console.WriteLine(e.Message);
+                await ReplyAsync(e.Message);
+            }
+        }
+
         [Command("snapshot", RunMode = RunMode.Async)]
         public async Task GetSnapshotOfGuild() {
             if (!await IsAdmin())
