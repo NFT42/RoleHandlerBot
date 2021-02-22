@@ -35,6 +35,20 @@ namespace RoleHandlerBot {
             return false;
         }
 
+        [Command("unbind", RunMode = RunMode.Async)]
+        public async Task WhoIs(string address) {
+            if (!await IsAdmin())
+                return;
+            try {
+                await User.DeleteFromAddress(address);
+                await ReplyAsync($"done");
+            }
+            catch (Exception e) {
+                Console.WriteLine(e.Message);
+                await ReplyAsync(e.Message);
+            }
+        }
+
         [Command("whois", RunMode = RunMode.Async)]
         public async Task WhoIs(ulong id) {
             try {
