@@ -34,7 +34,7 @@ namespace RoleHandlerBot.Blockchain {
             url += $"&offset={offset}";
             var req = new HttpRequestMessage {
                 RequestUri = new Uri(url),
-                Method = HttpMethod.Post,
+                Method = HttpMethod.Get,
                 Headers = { { "X-API-KEY", api} },
             };
             using (var client = new HttpClient()) {
