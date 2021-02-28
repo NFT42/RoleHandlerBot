@@ -38,6 +38,11 @@ namespace RoleHandlerBot
             return user.addresses;
         }
 
+        public static async Task DeleteUser(ulong id) {
+            var collec = DatabaseConnection.GetDb().GetCollection<User>("Users");
+            await collec.DeleteOneAsync(u => u.id == id);
+        }
+
         public static async Task DeleteFromAddress(string address) {
             var collec = DatabaseConnection.GetDb().GetCollection<User>("Users");
             await collec.DeleteOneAsync(u => u.addresses.Contains(address.ToLower()));

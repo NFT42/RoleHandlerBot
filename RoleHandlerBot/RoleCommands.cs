@@ -438,6 +438,55 @@ namespace RoleHandlerBot
                 await Context.Message.AddReactionAsync(new Emoji("❌"));
         }
 
+        //[Command("testClaimFor", RunMode = RunMode.Async)]
+        //public async Task TestClaimRole(ulong id, string claim) {
+        //    var user = await Context.Guild.GetUserAsync(id);
+        //    var nftRole = await NFTRoleHandler.GetRoleByClaimName(claim, Context.Guild.Id);
+        //    if (nftRole != null)
+        //        await TestClaimNFTRole(nftRole, user);
+        //}
+
+        //public async Task TestClaimNFTRole(NFTRoleHandler role, IGuildUser user) {
+        //    if (Context.Guild == null || Context.Guild.Id != role.guildId) {
+        //        await ReplyAsync("Please use command in the correct server.");
+        //        return;
+        //    }
+        //    var addresses = await User.GetUserAddresses(user.Id);
+        //    if (addresses.Count == 0) {
+        //        await ReplyAsync($"User has not binded an address. Please Bind an address using command `{Bot.CommandPrefix}verify`");
+        //        return;
+        //    }
+        //    await Context.Message.AddReactionAsync(Emote.Parse("<a:loading:726356725648719894>"));
+        //    var eligible = false;
+        //    foreach (var add in addresses) {
+        //        switch (role.RequirementType) {
+        //            case NFTReqType.HoldX:
+        //                eligible = await Blockchain.ChainWatcher.GetBalanceOf(role.NFTAddress, add) >= role.HoldXValue;
+        //                break;
+        //            case NFTReqType.InRange:
+        //                eligible = (await Blockchain.OpenSea.CheckNFTInRange(add, role.NFTAddress, role.MinRange, role.MaxRange, role.HoldXValue));
+        //                break;
+        //            case NFTReqType.Custom:
+        //                break;
+        //        }
+        //        if (eligible)
+        //            break;
+        //    }
+        //    await Context.Message.RemoveReactionAsync(Emote.Parse("<a:loading:726356725648719894>"), Context.Client.CurrentUser.Id);
+        //    if (eligible) {
+        //        //var user = Context.Message.Author as SocketGuildUser;
+        //        var aRole = Context.Guild.GetRole(role.RoleId);
+        //        try {
+        //            //await user.AddRoleAsync(aRole);
+        //        }
+        //        catch (Exception e) { Console.WriteLine(e.Message); }
+        //        await Context.Message.AddReactionAsync(new Emoji("✅"));
+        //    }
+        //    else
+        //        await Context.Message.AddReactionAsync(new Emoji("❌"));
+        //}
+
+
         public async Task ClaimNFTRole(NFTRoleHandler role) {
             if (Context.Guild == null || Context.Guild.Id != role.guildId) {
                 await ReplyAsync("Please use command in the correct server.");
@@ -599,6 +648,29 @@ namespace RoleHandlerBot
                 await Context.Message.AddReactionAsync(new Emoji("❌"));
         }
 
+
+        [Command("unlink", RunMode = RunMode.Async)]
+        public async Task UnlinkWallet() {
+            var addresses = await User.GetUserAddresses(Context.Message.Author.Id);
+            if (addresses.Count == 0) {
+                await ReplyAsync("User has not binded an address.");
+                return;
+            }
+            await User.DeleteUser(Context.Message.Author.Id);
+        }
+
+        [Command("address", RunMode = RunMode.Async)]
+        public async Task ShowAddresses() {
+            var addresses = await User.GetUserAddresses(Context.Message.Author.Id);
+            if (addresses.Count == 0) {
+                await ReplyAsync("User has not binded an address.");
+                return;
+            }
+            var str = "";
+            foreach (var add in addresses)
+                str += $"- {add}\n";
+            await Context.Message.Author.SendMessageAsync(str);
+        }
 
         [Command("verify")]
         public async Task BindWallet() {
