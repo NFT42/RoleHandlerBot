@@ -17,6 +17,12 @@ namespace RoleHandlerBot.Blockchain
         public static string GETH_WEB3_ENDPOINT = "http://localhost:8545";
 
 
+        public static async Task<Web3> GetGoodWeb3() {
+            if (await IsGethSynced())
+                return new Web3(GETH_WEB3_ENDPOINT);
+            return new Web3(INFURA_WEB3_ENDPOINT);
+        }
+
         public static async Task<string> GetOwnerOf(string tokenAddress, BigInteger id) {
             Web3 web3;
             web3 = new Web3(GETH_WEB3_ENDPOINT);
@@ -58,6 +64,26 @@ namespace RoleHandlerBot.Blockchain
             var param = new IsEnabledForAccount() { Artist = add };
             var res = await handler.QueryAsync<bool>("0xec133df5d806a9069aee513b8be01eeee2f03ff0", param);
             return res;
+        }
+
+        public static async Task<(BigInteger, BigInteger)> GetBlocks() {
+            Web3 web3 = new Web3(INFURA_WEB3_ENDPOINT);
+            Web3 web3Geth = new Web3(GETH_WEB3_ENDPOINT);
+
+            var currentBlock = await web3.Eth.Blocks.GetBlockNumber.SendRequestAsync();
+            var currentBlockGeth = await web3Geth.Eth.Blocks.GetBlockNumber.SendRequestAsync();
+
+            return (currentBlock.Value, currentBlockGeth.Value);
+        }
+
+        public static async Task<bool> IsGethSynced() {
+            Web3 web3 = new Web3(INFURA_WEB3_ENDPOINT);
+            Web3 web3Geth = new Web3(GETH_WEB3_ENDPOINT);
+
+            var currentBlock = await web3.Eth.Blocks.GetBlockNumber.SendRequestAsync();
+            var currentBlockGeth = await web3Geth.Eth.Blocks.GetBlockNumber.SendRequestAsync();
+
+            return currentBlock.Value - currentBlockGeth.Value < 20;
         }
     }
 

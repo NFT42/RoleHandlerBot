@@ -49,6 +49,21 @@ namespace RoleHandlerBot {
             }
         }
 
+        [Command("blocks", RunMode = RunMode.Async)]
+        public async Task CheckBlocks(string address) {
+            if (!await IsAdmin())
+                return;
+            try {
+                var (b1, b2) = await Blockchain.ChainWatcher.GetBlocks();
+                await ReplyAsync($"Infura block = {b1}\nGeth block = {b2}");
+            }
+            catch (Exception e) {
+                Console.WriteLine(e.Message);
+                await ReplyAsync(e.Message);
+            }
+        }
+
+
         [Command("whois", RunMode = RunMode.Async)]
         public async Task WhoIs(ulong id) {
             try {
