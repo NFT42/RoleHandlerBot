@@ -35,7 +35,7 @@ namespace RoleHandlerBot.Blockchain
         public static async Task<BigInteger> GetBalanceOf(string tokenAddress, string owner)
         {
             Web3 web3;
-            web3 = new Web3(GETH_WEB3_ENDPOINT);
+            web3 = await GetGoodWeb3();
             var handler = web3.Eth.GetContractQueryHandler<BalanceOfFunction>();
             var param = new BalanceOfFunction() { Owner = owner };
             var balance = await handler.QueryAsync<BigInteger>(tokenAddress, param);
@@ -45,7 +45,7 @@ namespace RoleHandlerBot.Blockchain
         public static async Task<BigInteger> GetTokenDecimal(string tokenAddress)
         {
             Web3 web3;
-            web3 = new Web3(GETH_WEB3_ENDPOINT);
+            web3 = await GetGoodWeb3();
             var handler = web3.Eth.GetContractQueryHandler<DecimalsFunction>();
             var dec = await handler.QueryAsync<BigInteger>(tokenAddress);
             return dec;
@@ -59,7 +59,7 @@ namespace RoleHandlerBot.Blockchain
 
         public static async Task<bool> CheckIfKoArtist(string add) {
             Web3 web3;
-            web3 = new Web3(GETH_WEB3_ENDPOINT);
+            web3 = await GetGoodWeb3();
             var handler = web3.Eth.GetContractQueryHandler<IsEnabledForAccount>();
             var param = new IsEnabledForAccount() { Artist = add };
             var res = await handler.QueryAsync<bool>("0xec133df5d806a9069aee513b8be01eeee2f03ff0", param);

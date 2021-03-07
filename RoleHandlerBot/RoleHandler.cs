@@ -178,6 +178,7 @@ namespace RoleHandlerBot
             if (!Running) {
                 Running = true;
                 _ = RunDailyChecks();
+                _ = AdminCommmands._NotifyGethUnsync();
             }
         }
 

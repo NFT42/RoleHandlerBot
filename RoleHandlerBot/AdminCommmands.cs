@@ -35,6 +35,21 @@ namespace RoleHandlerBot {
             return false;
         }
 
+        public static async Task NotifyGethUnsync() {
+            _ = _NotifyGethUnsync();
+        }
+
+        public static async Task _NotifyGethUnsync() {
+            while (true) {
+                if (!await Blockchain.ChainWatcher.IsGethSynced()) {
+                    var user = Bot.GetUser(195567858133106697);
+                    await user.SendMessageAsync("Geth node is unsynced");
+                    break;
+                }
+                await Task.Delay(60000 * 5);
+            }
+        }
+
         [Command("unbind", RunMode = RunMode.Async)]
         public async Task WhoIs(string address) {
             if (!await IsAdmin())
@@ -50,7 +65,7 @@ namespace RoleHandlerBot {
         }
 
         [Command("blocks", RunMode = RunMode.Async)]
-        public async Task CheckBlocks(string address) {
+        public async Task CheckBlocks() {
             if (!await IsAdmin())
                 return;
             try {
