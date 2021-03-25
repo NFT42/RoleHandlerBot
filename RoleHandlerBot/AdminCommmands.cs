@@ -50,6 +50,13 @@ namespace RoleHandlerBot {
             }
         }
 
+        [Command("dump", RunMode = RunMode.Async)]
+        public async Task Dump() {
+            if (!await IsAdmin())
+                return;
+            await Context.Message.Author.SendFileAsync("log.txt");
+        }
+
         [Command("unbind", RunMode = RunMode.Async)]
         public async Task WhoIs(string address) {
             if (!await IsAdmin())

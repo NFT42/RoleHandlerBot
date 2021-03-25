@@ -13,7 +13,7 @@ namespace RoleHandlerBot
 
         public ThreadSafeFileBuffer(string filePath, int flushPeriodInSeconds = 5)
         {
-            if (!File.Exists(filePath)) filePath = "Logger\\log.txt";
+            if (!File.Exists(filePath)) filePath = "log.txt";
             _fileStream = new FileStream(filePath, FileMode.Append, FileAccess.Write, FileShare.Read);
             _writer = new StreamWriter(_fileStream);
             var flushPeriod = TimeSpan.FromSeconds(flushPeriodInSeconds);
