@@ -109,34 +109,46 @@ namespace RoleHandlerBot.KnownOrigin {
             var user = await Context.Guild.GetUserAsync(userId);
             
             await Context.Message.AddReactionAsync(Emote.Parse("<a:loading:726356725648719894>"));
-            await ClaimKoProfileRole(addresses, user);
-            await ClaimKoUserRole(addresses, user);
-            await ClaimeKoArtistRole(addresses, user);
-            await ClaimKoWhaleRole(addresses, user);
-            var nftRoles = await NFTRoleHandler.GetAllRolesByGuild(Context.Guild.Id);
-            foreach (var role in nftRoles) {
-                var eligible = false;
-                foreach (var add in addresses) {
-                    switch (role.RequirementType) {
-                        case NFTReqType.HoldX:
-                            eligible = await Blockchain.ChainWatcher.GetBalanceOf(role.NFTAddress, add) >= role.HoldXValue;
-                            break;
-                        case NFTReqType.InRange:
-                            eligible = (await Blockchain.OpenSea.CheckNFTInRange(add, role.NFTAddress, role.MinRange, role.MaxRange, role.HoldXValue));
-                            break;
-                        case NFTReqType.Custom:
+            try {
+                await ClaimKoProfileRole(addresses, user);
+                await ClaimKoUserRole(addresses, user);
+                await ClaimeKoArtistRole(addresses, user);
+                await ClaimKoWhaleRole(addresses, user);
+            }
+            catch (Exception e) {
+                await ReplyAsync($"KO Error: {e.Message}");
+                return;
+            }
+            try {
+                var nftRoles = await NFTRoleHandler.GetAllRolesByGuild(Context.Guild.Id);
+                foreach (var role in nftRoles) {
+                    var eligible = false;
+                    foreach (var add in addresses) {
+                        switch (role.RequirementType) {
+                            case NFTReqType.HoldX:
+                                eligible = await Blockchain.ChainWatcher.GetBalanceOf(role.NFTAddress, add) >= role.HoldXValue;
+                                break;
+                            case NFTReqType.InRange:
+                                eligible = (await Blockchain.OpenSea.CheckNFTInRange(add, role.NFTAddress, role.MinRange, role.MaxRange, role.HoldXValue));
+                                break;
+                            case NFTReqType.Custom:
+                                break;
+                        }
+                        if (eligible)
                             break;
                     }
-                    if (eligible)
-                        break;
-                }
-                if (eligible) {
-                    var aRole = Context.Guild.GetRole(role.RoleId);
-                    try {
-                        await user.AddRoleAsync(aRole);
+                    if (eligible) {
+                        var aRole = Context.Guild.GetRole(role.RoleId);
+                        try {
+                            await user.AddRoleAsync(aRole);
+                        }
+                        catch (Exception e) { Console.WriteLine(e.Message); }
                     }
-                    catch (Exception e) { Console.WriteLine(e.Message); }
                 }
+            }
+            catch (Exception e) {
+                await ReplyAsync($"NFT role Error: {e.Message}");
+                return;
             }
             await Context.Message.RemoveReactionAsync(Emote.Parse("<a:loading:726356725648719894>"), Context.Client.CurrentUser.Id);
             await Context.Message.AddReactionAsync(new Emoji("✅"));
