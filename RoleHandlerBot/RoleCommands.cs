@@ -283,7 +283,7 @@ namespace RoleHandlerBot
                 foreach (var pair in group.RoleDict) {
                     var str = $"{i++}. {group.GroupName} group:";
                     var inStr = "";
-                    inStr += $" Requirement -> cost {BigNumber.FormatUint(pair.Value.Requirement, group.TokenDecimal)} {group.TokenName}";
+                    inStr += $" Requirement -> hold {BigNumber.FormatUint(pair.Value.Requirement, group.TokenDecimal)} {group.TokenName}";
                     var mention = Context.Guild.GetRole(ulong.Parse(pair.Key)).Mention;
                     embed.AddField(str + inStr, $"{mention} | type `{Bot.CommandPrefix}claim {pair.Value.ClaimName}` to claim");
                 }
@@ -296,7 +296,7 @@ namespace RoleHandlerBot
             if (!await IsAdmin())
                 return;
             var embed = new EmbedBuilder().WithTitle("📜 Groups 📜").WithColor(Color.Blue);
-            embed.WithDescription("Delete a role handler using `{Bot.CommandPrefix}deletegroup groupName` [ADMIN ONLY]");
+            embed.WithDescription($"Delete a role handler using `{Bot.CommandPrefix}deletegroup groupName` [ADMIN ONLY]");
             var groups = await GroupHandler.GetAllGroupHandlerFromGuild(Context.Guild.Id);
             var i = 1;
             foreach (var group in groups) {
@@ -321,7 +321,7 @@ namespace RoleHandlerBot
             }
             var addresses = await User.GetUserAddresses(Context.Message.Author.Id);
             if (addresses.Count == 0) {
-                await ReplyAsync("User has not binded an address. Please Bind an address using command `{Bot.CommandPrefix}verify`");
+                await ReplyAsync($"User has not binded an address. Please Bind an address using command `{Bot.CommandPrefix}verify`");
                 return;
             }
             await Context.Message.AddReactionAsync(Emote.Parse("<a:loading:726356725648719894>"));
@@ -438,13 +438,16 @@ namespace RoleHandlerBot
                 await Context.Message.AddReactionAsync(new Emoji("❌"));
         }
 
-        //[Command("testClaimFor", RunMode = RunMode.Async)]
-        //public async Task TestClaimRole(ulong id, string claim) {
-        //    var user = await Context.Guild.GetUserAsync(id);
-        //    var nftRole = await NFTRoleHandler.GetRoleByClaimName(claim, Context.Guild.Id);
-        //    if (nftRole != null)
-        //        await TestClaimNFTRole(nftRole, user);
-        //}
+        [Command("testClaimFor", RunMode = RunMode.Async)]
+        public async Task TestClaimRole(ulong id, string claim) {
+            var user = await Context.Guild.GetUserAsync(id);
+            var dUser = await Context.Guild.GetUserAsync(id);
+            var (pair, group) = await GroupHandler.GetGroupRoleFromClaimName(claim, Context.Guild.Id);
+            if (group != null) {
+                await TestClaimGroupRole(pair, group, dUser);
+                return;
+            }
+        }
 
         //public async Task TestClaimNFTRole(NFTRoleHandler role, IGuildUser user) {
         //    if (Context.Guild == null || Context.Guild.Id != role.guildId) {
@@ -574,6 +577,43 @@ namespace RoleHandlerBot
             await Context.Message.AddReactionAsync(new Emoji("✅"));
         }
 
+        public async Task TestClaimGroupRole(KeyValuePair<string, GroupRole> pair, GroupHandler group, IGuildUser dUser) {
+            if (Context.Guild == null || Context.Guild.Id != group.guildId) {
+                await ReplyAsync("Please use command in the correct server.");
+                return;
+            }
+            var addresses = await User.GetUserAddresses(dUser.Id);
+            if (addresses.Count == 0) {
+                await ReplyAsync($"User has not binded an address. Please Bind an address using command `{Bot.CommandPrefix}verify`");
+                return;
+            }
+            await Context.Message.AddReactionAsync(Emote.Parse("<a:loading:726356725648719894>"));
+            var balance = BigInteger.Zero;
+            foreach (var address in addresses)
+                balance += await Blockchain.ChainWatcher.GetBalanceOf(group.TokenAddress, address);
+            var usedBalance = BigInteger.Zero;
+            var roleReq = BigInteger.Parse(pair.Value.Requirement);
+            var guildUser = dUser;
+            var userRoles = guildUser.RoleIds;
+            foreach (var role in group.RoleDict) {
+                if (userRoles.Contains(ulong.Parse(role.Key)))
+                    usedBalance += BigInteger.Parse(role.Value.Requirement);
+            }
+            var eligible = balance >= usedBalance + roleReq;
+            await Context.Message.RemoveReactionAsync(Emote.Parse("<a:loading:726356725648719894>"), Context.Client.CurrentUser.Id);
+            if (eligible) {
+                var user = dUser as SocketGuildUser;
+                var aRole = Context.Guild.GetRole(ulong.Parse(pair.Key));
+                try {
+                    await user.AddRoleAsync(aRole);
+                }
+                catch (Exception e) { Console.WriteLine(e.Message); }
+                await Context.Message.AddReactionAsync(new Emoji("✅"));
+            }
+            else
+                await Context.Message.AddReactionAsync(new Emoji("❌"));
+        }
+
         public async Task ClaimGroupRole(KeyValuePair<string, GroupRole> pair, GroupHandler group) {
             if (Context.Guild == null || Context.Guild.Id != group.guildId) {
                 await ReplyAsync("Please use command in the correct server.");
@@ -581,7 +621,7 @@ namespace RoleHandlerBot
             }
             var addresses = await User.GetUserAddresses(Context.Message.Author.Id);
             if (addresses.Count == 0) {
-                await ReplyAsync("User has not binded an address. Please Bind an address using command `{Bot.CommandPrefix}verify`");
+                await ReplyAsync($"User has not binded an address. Please Bind an address using command `{Bot.CommandPrefix}verify`");
                 return;
             }
             await Context.Message.AddReactionAsync(Emote.Parse("<a:loading:726356725648719894>"));
@@ -618,7 +658,7 @@ namespace RoleHandlerBot
             }
             var addresses = await User.GetUserAddresses(user.Id);
             if (addresses.Count == 0) {
-                await ReplyAsync("User has not binded an address. Please Bind an address using command `{Bot.CommandPrefix}verify`");
+                await ReplyAsync($"User has not binded an address. Please Bind an address using command `{Bot.CommandPrefix}verify`");
                 return;
             }
             await Context.Message.AddReactionAsync(Emote.Parse("<a:loading:726356725648719894>"));
