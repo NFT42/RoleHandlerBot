@@ -160,7 +160,9 @@ namespace RoleHandlerBot.KnownOrigin {
                 return;
             }
             var koRole = Context.Guild.GetRole(807686850718203914);
-            await (user as SocketGuildUser).AddRoleAsync(koRole);
+            var restUser = await Bot.DiscordClient.Rest.GetGuildUserAsync(Context.Guild.Id, user.Id);
+            await restUser.AddRoleAsync(koRole);
+            //await (user as SocketGuildUser).AddRoleAsync(koRole);
         }
 
         public async Task ClaimKoProfileRole(List<string> addresses, IUser user) {
@@ -171,7 +173,8 @@ namespace RoleHandlerBot.KnownOrigin {
             var koRole = Context.Guild.GetRole(807664717396443146);
             foreach (var add in addresses) {
                 if (await CallKoAPIProfile(add)) {
-                    await (user as SocketGuildUser).AddRoleAsync(koRole);
+                    var restUser = await Bot.DiscordClient.Rest.GetGuildUserAsync(Context.Guild.Id, user.Id);
+                    await restUser.AddRoleAsync(koRole);
                     return;
                 }
             }
@@ -200,10 +203,11 @@ namespace RoleHandlerBot.KnownOrigin {
             var artistRole = Context.Guild.GetRole(727165006524842042);
             var newArtistRole = Context.Guild.GetRole(807968579932389376);
             foreach (var add in addresses) {
+                var restUser = await Bot.DiscordClient.Rest.GetGuildUserAsync(Context.Guild.Id, user.Id);
                 if (await Blockchain.ChainWatcher.CheckIfKoArtist(add)) {
                     if (await CheckIfNewArtist(add))
-                        await (user as SocketGuildUser).AddRoleAsync(newArtistRole);
-                    await (user as SocketGuildUser).AddRoleAsync(artistRole);
+                        await restUser.AddRoleAsync(newArtistRole);
+                    await restUser.AddRoleAsync(artistRole);
                     return;
                 }
             }
@@ -240,7 +244,8 @@ namespace RoleHandlerBot.KnownOrigin {
             var whaleRole = Context.Guild.GetRole(807664934511050762);
             foreach (var add in addresses) {
                 if (await KoGraphQl.KoGraphQlQuery(add) >= 10f) {
-                    await (user as SocketGuildUser).AddRoleAsync(whaleRole);
+                    var restUser = await Bot.DiscordClient.Rest.GetGuildUserAsync(Context.Guild.Id, user.Id);
+                    await restUser.AddRoleAsync(whaleRole);
                     return;
                 }
             }
