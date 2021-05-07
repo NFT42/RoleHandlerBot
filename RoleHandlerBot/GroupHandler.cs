@@ -39,13 +39,15 @@ namespace RoleHandlerBot {
 
         public async Task CheckAllRoleReq() {
             try {
-                Console.WriteLine($"Checking {GroupName}");
+                Logger.LogInternal($"Checking {GroupName}");
                 var guild = Bot.DiscordClient.GetGuild(guildId) as IGuild;
                 var rolesId = RoleDict.Keys.Select(k => ulong.Parse(k)).ToList();
                 var roles = new List<IRole>();
                 foreach (var id in rolesId)
                     roles.Add(guild.GetRole(id));
                 var roleUsers = (await guild.GetUsersAsync());
+                //var somethingGuild = await Bot.DiscordClient.Rest.GetGuildAsync(guildId);
+                //var somethingUsers = await somethingGuild.GetUsersAsync().FlattenAsync();
                 foreach (var user in roleUsers) {
                     if (!user.IsBot) {
                         var addresses = await User.GetUserAddresses(user.Id);
@@ -85,10 +87,10 @@ namespace RoleHandlerBot {
                         }
                     }
                 }
-                Console.WriteLine("Done\n");
+                Logger.LogInternal("Done\n");
             }
             catch (Exception e) {
-                Console.WriteLine(e.Message);
+                Logger.LogInternal(e.Message);
             }
         }
 
