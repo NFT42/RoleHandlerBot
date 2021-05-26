@@ -403,8 +403,14 @@ namespace RoleHandlerBot
         {
             var (pair, group) = await GroupHandler.GetGroupRoleFromClaimName(claim, Context.Guild.Id);
             if (group != null) {
-                await ClaimGroupRole(pair, group);
-                return;
+                try {
+                    await ClaimGroupRole(pair, group);
+                    return;
+                }
+                catch (Exception e) {
+                    Logger.LogInternal(e.Message);
+                    return;
+                }
             }
             var nftRole = await NFTRoleHandler.GetRoleByClaimName(claim, Context.Guild.Id);
             if (nftRole != null)
