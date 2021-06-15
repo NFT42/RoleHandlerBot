@@ -201,12 +201,12 @@ namespace RoleHandlerBot.KnownOrigin {
                 return;
             }
             var artistRole = Context.Guild.GetRole(727165006524842042);
-            var newArtistRole = Context.Guild.GetRole(807968579932389376);
+            //var newArtistRole = Context.Guild.GetRole(807968579932389376);
             foreach (var add in addresses) {
                 var restUser = await Bot.DiscordClient.Rest.GetGuildUserAsync(Context.Guild.Id, user.Id);
                 if (await Blockchain.ChainWatcher.CheckIfKoArtist(add)) {
-                    if (await CheckIfNewArtist(add))
-                        await restUser.AddRoleAsync(newArtistRole);
+                    //if (await CheckIfNewArtist(add))
+                    //    await restUser.AddRoleAsync(newArtistRole);
                     await restUser.AddRoleAsync(artistRole);
                     return;
                 }
