@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Globalization;
 using System.Numerics;
+using System.IO;
+using System.Text;
 using MongoDB.Driver;
 using Discord;
 using Discord.WebSocket;
@@ -52,9 +54,16 @@ namespace RoleHandlerBot {
 
         [Command("dump", RunMode = RunMode.Async)]
         public async Task Dump() {
-            if (!await IsAdmin())
+            if (!await IsAdmin()) {
+                await ReplyAsync("Not admin");
                 return;
-            await Context.Message.Author.SendFileAsync("log.txt");
+            }
+            try {
+                await Context.Message.Author.SendFileAsync("log.txt");
+            }
+            catch (Exception e) {
+                await ReplyAsync(e.Message);
+            }
         }
 
         [Command("unbind", RunMode = RunMode.Async)]
@@ -127,8 +136,14 @@ namespace RoleHandlerBot {
                     snapshotList.Add(parsedUSer);
             }
             var snapshotCollec = DatabaseConnection.GetDb().GetCollection<User>("YGGSnapshot");
-            await snapshotCollec.InsertManyAsync(snapshotList);
-            await ReplyAsync("Snapshot taken");
+            var list = "";
+            foreach (var u in snapshotList)
+                list += $"{u.addresses[0]}\n";
+            byte[] byteArray = Encoding.UTF8.GetBytes(list);
+            //byte[] byteArray = Encoding.ASCII.GetBytes(contents);
+            MemoryStream stream = new MemoryStream(byteArray);
+
+            await Context.Message.Channel.SendFileAsync(stream, "snapshot.csv");
         }
     }
 }
